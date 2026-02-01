@@ -128,3 +128,4 @@ Denne integrasjonen er **selvstendig utviklet** som en moderne Home Assistant-in
 MIT – se `LICENSE`.
 
 
+
