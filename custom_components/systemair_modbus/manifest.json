@@ -1,9 +1,9 @@
 {
   "domain": "systemair_modbus",
-  "name": "Systemair VTR (Modbus)",
-  "version": "0.2.0-dev",
-  "documentation": "https://github.com/Howard0000/home-assistant-systemair-vtr500",
-  "issue_tracker": "https://github.com/Howard0000/home-assistant-systemair-vtr500/issues",
+  "name": "Systemair Modbus",
+  "version": "0.1.0",
+  "documentation": "https://github.com/Howard0000/home-assistant-systemair-modbus",
+  "issue_tracker": "https://github.com/Howard0000/home-assistant-systemair-modbus/issues",
   "requirements": [
     "pymodbus>=3.6.0"
   ],
