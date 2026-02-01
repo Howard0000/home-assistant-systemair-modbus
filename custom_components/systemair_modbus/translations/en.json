@@ -1,5 +1,5 @@
 {
-  "title": "Systemair VTR (Modbus)",
+  "title": "Systemair Modbus",
   "entity": {
     "sensor": {
       "mode_status_text": {
