@@ -108,10 +108,16 @@ Når dette fungerer, kan IP-adressen brukes direkte i Home Assistant-integrasjon
 
 ## 🙏 Anerkjennelser / Credits
 
-Prosjektet er inspirert av tidligere community-arbeid og tilgjengelig dokumentasjon rundt Systemair Modbus-integrasjoner, blant annet:
+## 🙏 Anerkjennelser
 
-- https://github.com/Ztaeyn/HomeAssistant-VTR-Modbus
-- https://www.domotics.no/
+Installasjonsveiledningen for Elfin EW11 (Modbus RTU → TCP) er basert på
+arbeidet publisert på [domotics.no](https://www.domotics.no/), skrevet av
+Mads Nedrehagen.
+
+I tillegg har en KI-assistent blitt brukt som støtte til feilsøking,
+refaktorering og forbedring av dokumentasjon under utviklingen av prosjektet.
+
+
 
 Denne integrasjonen er **selvstendig utviklet** som en moderne Home Assistant-integrasjon.
 
@@ -119,3 +125,4 @@ Denne integrasjonen er **selvstendig utviklet** som en moderne Home Assistant-in
 
 ## 📝 Lisens
 MIT – se `LICENSE`.
+
