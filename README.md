@@ -1,8 +1,8 @@
-# Home Assistant – Systemair Modbus (SAVE / VTR)
+# Home Assistant – Systemair Modbus (SAVE)
 
 > [Read this guide in English](README.en.md)
 
-Dette er en **Home Assistant-integrasjon for Systemair SAVE / VTR-aggregater** via **Modbus TCP**.
+Dette er en **Home Assistant-integrasjon for Systemair SAVE-aggregater** via **Modbus TCP**.
 
 ⚠️ Dette er et uoffisielt community-prosjekt og er ikke utviklet, støttet eller vedlikeholdt av Systemair.
 
@@ -32,7 +32,7 @@ ved hjelp av entiteter fra denne integrasjonen. Selve kortet følger ikke med in
 
 ### Krav
 - Home Assistant **2024.6** eller nyere
-- Systemair SAVE / VTR med Modbus-tilgang
+- Systemair SAVE med Modbus-tilgang
 - Modbus TCP (innebygd eller via ekstern gateway)
 - HACS (Home Assistant Community Store)
 
@@ -70,14 +70,14 @@ Denne seksjonen er relevant **dersom aggregatet ikke har innebygd Modbus TCP** o
 Koble alltid fra strømmen til ventilasjonsaggregatet før du åpner det.  
 Er du usikker, kontakt kvalifisert fagperson.
 
-### 1. Koble til Modbus på Systemair VTR
+### 1. Koble til Modbus på Systemair SAVE
 Finn terminalen for ekstern kommunikasjon på hovedkortet, merket:
 - `A(+)`
 - `B(-)`
 - `24V`
 - `GND`
 
-![Koblingsskjema VTR-500](image/koblingsskjemaVTR-500.png)
+![Eksempel koblingsskjema (VTR-500)](image/koblingsskjemaVTR-500.png)
 
 ### 2. Koble Elfin EW11
 Koble ledningene i henhold til skjemaet under:

@@ -1,8 +1,8 @@
-# Home Assistant – Systemair Modbus (SAVE / VTR)
+# Home Assistant – Systemair Modbus (SAVE)
 
 > [Les denne guiden på norsk](README.md)
 
-This is a **Home Assistant integration for Systemair SAVE / VTR ventilation units**
+This is a **Home Assistant integration for Systemair SAVE ventilation units**
 using **Modbus TCP**.
 
 ⚠️ This is an unofficial community project and is not developed, supported, or
@@ -33,7 +33,7 @@ The card itself is not included with the integration.
 
 ### Requirements
 - Home Assistant **2024.6** or newer
-- Systemair SAVE / VTR unit with Modbus access
+- Systemair SAVE unit with Modbus access
 - Modbus TCP (built-in or via external gateway)
 - HACS (Home Assistant Community Store)
 
@@ -81,7 +81,7 @@ Locate the external communication terminal on the main control board, labeled:
 - `24V`
 - `GND`
 
-![Systemair VTR-500 wiring](image/koblingsskjemaVTR-500.png)
+![Example wiring (VTR-500)](image/koblingsskjemaVTR-500.png)
 
 ### 2. Connect the Elfin EW11
 Wire the Elfin EW11 according to the diagram below:

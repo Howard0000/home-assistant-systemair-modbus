@@ -13,7 +13,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 - First stable and fully tested release of **Systemair Modbus**
 - UI-based setup via Home Assistant Config Flow
-- Support for Systemair SAVE / VTR ventilation units using Modbus TCP
+- Support for Systemair SAVE ventilation units using Modbus TCP
 - Sensors for temperatures, operational status, and calculated values
 - Binary sensors for alarms and unit states
 - Number entities for setpoints and adjustable parameters
