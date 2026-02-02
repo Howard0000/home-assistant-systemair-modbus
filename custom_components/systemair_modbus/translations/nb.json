@@ -3,19 +3,60 @@
   "entity": {
     "sensor": {
       "mode_status_text": {
-        "name": "Modus"
+        "name": "Modus",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manuell",
+          "party": "Party",
+          "boost": "Boost",
+          "fireplace": "Peis",
+          "away": "Borte",
+          "holiday": "Ferie",
+          "cooker_hood": "Kjøkkenhette",
+          "vacuum_cleaner": "Støvsuger",
+          "cdi1": "CDI1",
+          "cdi2": "CDI2",
+          "cdi3": "CDI3",
+          "pressure_guard": "Trykkvakt",
+          "auto_low": "Auto – Lav",
+          "auto_normal": "Auto – Normal",
+          "auto_high": "Auto – Høy",
+          "manual_stop": "Manuell – Stopp",
+          "manual_low": "Manuell – Lav",
+          "manual_normal": "Manuell – Normal",
+          "manual_high": "Manuell – Høy",
+          "manual_unknown": "Manuell – Ukjent",
+          "unknown": "Ukjent"
+        }
       },
       "active_season": {
-        "name": "Aktiv sesong"
+        "name": "Aktiv sesong",
+        "state": {
+          "summer": "Sommer",
+          "winter": "Vinter",
+          "unknown": "Ukjent"
+        }
       },
       "next_filter_change": {
         "name": "Neste filterskift"
       },
       "iaq_level_text": {
-        "name": "Luftkvalitet"
+        "name": "Luftkvalitet",
+        "state": {
+          "economy": "Økonomi",
+          "good": "God",
+          "improve": "Forbedres",
+          "unknown": "Ukjent"
+        }
       },
       "regulation_mode_text": {
-        "name": "Regulering"
+        "name": "Regulering",
+        "state": {
+          "supply_air": "Tilluftsregulering",
+          "room": "Romregulering",
+          "exhaust": "Avtrekksregulering",
+          "unknown": "Ukjent"
+        }
       },
       "exhaust_air_flow_rate": {
         "name": "Avkast luftmengde"
@@ -243,51 +284,6 @@
         "data": {
           "scan_interval": "Oppdateringsintervall (sekunder)"
         }
-      }
-    }
-  },
-  "state": {
-    "systemair_modbus": {
-      "mode_status_text": {
-        "auto": "Auto",
-        "manual": "Manuell",
-        "party": "Party",
-        "boost": "Boost",
-        "fireplace": "Peis",
-        "away": "Borte",
-        "holiday": "Ferie",
-        "cooker_hood": "Kjøkkenhette",
-        "vacuum_cleaner": "Støvsuger",
-        "cdi1": "CDI1",
-        "cdi2": "CDI2",
-        "cdi3": "CDI3",
-        "pressure_guard": "Trykkvakt",
-        "auto_low": "Auto – Lav",
-        "auto_normal": "Auto – Normal",
-        "auto_high": "Auto – Høy",
-        "manual_stop": "Manuell – Stopp",
-        "manual_low": "Manuell – Lav",
-        "manual_normal": "Manuell – Normal",
-        "manual_high": "Manuell – Høy",
-        "manual_unknown": "Manuell – Ukjent",
-        "unknown": "Ukjent"
-      },
-      "active_season": {
-        "summer": "Sommer",
-        "winter": "Vinter",
-        "unknown": "Ukjent"
-      },
-      "iaq_level_text": {
-        "economy": "Økonomi",
-        "good": "God",
-        "improve": "Forbedres",
-        "unknown": "Ukjent"
-      },
-      "regulation_mode_text": {
-        "supply_air": "Tilluftsregulering",
-        "room": "Romregulering",
-        "exhaust": "Avtrekksregulering",
-        "unknown": "Ukjent"
       }
     }
   }
