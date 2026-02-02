@@ -1,17 +1,13 @@
 {
   "domain": "systemair_modbus",
   "name": "Systemair Modbus",
-  "version": "1.0.0",
-  "documentation": "https://github.com/Howard0000/home-assistant-systemair-modbus",
-  "issue_tracker": "https://github.com/Howard0000/home-assistant-systemair-modbus/issues",
-  "requirements": [
-    "pymodbus>=3.6.0"
-  ],
-  "codeowners": [
-    "@Howard0000"
-  ],
+  "codeowners": ["@Howard0000"],
   "config_flow": true,
+  "documentation": "https://github.com/Howard0000/home-assistant-systemair-modbus",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "integration_type": "device"
+  "issue_tracker": "https://github.com/Howard0000/home-assistant-systemair-modbus/issues",
+  "requirements": ["pymodbus==3.6.0"],
+  "version": "1.0.0"
 }
 
