@@ -258,7 +258,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Systemair VTR (Modbus)",
+        "title": "Systemair SAVE (Modbus)",
         "description": "Set up Systemair ventilation via Modbus TCP.",
         "data": {
           "model": "Model",
