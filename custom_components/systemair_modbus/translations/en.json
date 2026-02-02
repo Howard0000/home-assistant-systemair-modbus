@@ -3,19 +3,60 @@
   "entity": {
     "sensor": {
       "mode_status_text": {
-        "name": "Mode"
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "party": "Party",
+          "boost": "Boost",
+          "fireplace": "Fireplace",
+          "away": "Away",
+          "holiday": "Holiday",
+          "cooker_hood": "Cooker hood",
+          "vacuum_cleaner": "Vacuum cleaner",
+          "cdi1": "CDI1",
+          "cdi2": "CDI2",
+          "cdi3": "CDI3",
+          "pressure_guard": "Pressure guard",
+          "auto_low": "Auto – Low",
+          "auto_normal": "Auto – Normal",
+          "auto_high": "Auto – High",
+          "manual_stop": "Manual – Stop",
+          "manual_low": "Manual – Low",
+          "manual_normal": "Manual – Normal",
+          "manual_high": "Manual – High",
+          "manual_unknown": "Manual – Unknown",
+          "unknown": "Unknown"
+        }
       },
       "active_season": {
-        "name": "Active season"
+        "name": "Active season",
+        "state": {
+          "summer": "Summer",
+          "winter": "Winter",
+          "unknown": "Unknown"
+        }
       },
       "next_filter_change": {
         "name": "Next filter change"
       },
       "iaq_level_text": {
-        "name": "Air quality"
+        "name": "Air quality",
+        "state": {
+          "economy": "Economy",
+          "good": "Good",
+          "improve": "Needs improvement",
+          "unknown": "Unknown"
+        }
       },
       "regulation_mode_text": {
-        "name": "Regulation"
+        "name": "Regulation",
+        "state": {
+          "supply_air": "Supply air control",
+          "room": "Room control",
+          "exhaust": "Extract air control",
+          "unknown": "Unknown"
+        }
       },
       "exhaust_air_flow_rate": {
         "name": "Exhaust airflow"
@@ -243,51 +284,6 @@
         "data": {
           "scan_interval": "Scan interval (seconds)"
         }
-      }
-    }
-  },
-  "state": {
-    "systemair_modbus": {
-      "mode_status_text": {
-        "auto": "Auto",
-        "manual": "Manual",
-        "party": "Party",
-        "boost": "Boost",
-        "fireplace": "Fireplace",
-        "away": "Away",
-        "holiday": "Holiday",
-        "cooker_hood": "Cooker hood",
-        "vacuum_cleaner": "Vacuum cleaner",
-        "cdi1": "CDI1",
-        "cdi2": "CDI2",
-        "cdi3": "CDI3",
-        "pressure_guard": "Pressure guard",
-        "auto_low": "Auto – Low",
-        "auto_normal": "Auto – Normal",
-        "auto_high": "Auto – High",
-        "manual_stop": "Manual – Stop",
-        "manual_low": "Manual – Low",
-        "manual_normal": "Manual – Normal",
-        "manual_high": "Manual – High",
-        "manual_unknown": "Manual – Unknown",
-        "unknown": "Unknown"
-      },
-      "active_season": {
-        "summer": "Summer",
-        "winter": "Winter",
-        "unknown": "Unknown"
-      },
-      "iaq_level_text": {
-        "economy": "Economy",
-        "good": "Good",
-        "improve": "Needs improvement",
-        "unknown": "Unknown"
-      },
-      "regulation_mode_text": {
-        "supply_air": "Supply air control",
-        "room": "Room control",
-        "exhaust": "Extract air control",
-        "unknown": "Unknown"
       }
     }
   }
