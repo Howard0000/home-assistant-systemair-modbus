@@ -28,6 +28,19 @@ class SaveModel:
     model_name = "Systemair SAVE"
     manufacturer = "Systemair"
 
+    def __init__(self, *, qv_max: int | None = None) -> None:
+        """Create a model instance.
+
+        qv_max is the nominal maximum air flow (m³/h) for the selected unit model.
+        If not provided, we fall back to the legacy factor (fan % * 3).
+        """
+        self._qv_max = qv_max
+
+    @property
+    def flow_factor(self) -> float:
+        """m³/h per % (estimated)."""
+        return (self._qv_max / 100.0) if self._qv_max else 3.0
+
     ADDR_MODE_STATUS = 1160
     ADDR_MODE_COMMAND = 1161
     ADDR_MANUAL_SPEED_COMMAND = 1130
@@ -205,8 +218,7 @@ class SaveModel:
         RegisterDef(key='c_alarm', address=15902, input_type='holding', data_type='uint16'),
     ]
 
-    @staticmethod
-    def compute_derived(data: dict[str, Any]) -> dict[str, Any]:
+    def compute_derived(self, data: dict[str, Any]) -> dict[str, Any]:
         out: dict[str, Any] = {}
 
         seconds = int(data.get("time_to_filter_replacement") or 0)
@@ -264,7 +276,7 @@ class SaveModel:
             out["mode_status_text"] = SaveModel.STATUS_MODE_TO_KEY.get(mode, "unknown")
 
 
-        # Flow rates (approx.): derived from fan power factor (%) * 3 => m³/h
+        # Flow rates (estimated): derived from fan power factor (%) * flow_factor => m³/h
         try:
             p_e = int(float(data.get("extractor_fan_pwr_fact") or 0))
         except (TypeError, ValueError):
@@ -273,6 +285,6 @@ class SaveModel:
             p_s = int(float(data.get("supply_air_fan_pwr_fact") or 0))
         except (TypeError, ValueError):
             p_s = 0
-        out["exhaust_air_flow_rate"] = round(p_e * 3)
-        out["supply_air_flow_rate"] = round(p_s * 3)
+        out["exhaust_air_flow_rate"] = round(p_e * self.flow_factor)
+        out["supply_air_flow_rate"] = round(p_s * self.flow_factor)
         return out

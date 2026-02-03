@@ -14,7 +14,9 @@ from .const import (
     CONF_SLAVE,
     CONF_SCAN_INTERVAL,
     CONF_MODEL,
+    CONF_UNIT_MODEL,
     DEFAULT_SCAN_INTERVAL,
+    UNIT_MODEL_QV_MAX,
 )
 
 
@@ -23,11 +25,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = entry.data[CONF_PORT]
     slave = entry.data[CONF_SLAVE]
     model_id = entry.data[CONF_MODEL]
+    unit_model = entry.data.get(CONF_UNIT_MODEL)
+    qv_max = UNIT_MODEL_QV_MAX.get(unit_model) if unit_model else None
 
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
     model_cls = MODEL_REGISTRY[model_id]
-    model = model_cls
+    model = model_cls(qv_max=qv_max)
 
     client = ModbusTcpClient(host=host, port=port, slave=slave)
     coordinator = SystemairCoordinator(

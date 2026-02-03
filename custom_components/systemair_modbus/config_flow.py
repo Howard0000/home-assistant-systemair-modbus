@@ -17,10 +17,12 @@ from .const import (
     CONF_SLAVE,
     CONF_SCAN_INTERVAL,
     CONF_MODEL,
+    CONF_UNIT_MODEL,
     DEFAULT_PORT,
     DEFAULT_SLAVE,
     DEFAULT_SCAN_INTERVAL,
     SUPPORTED_MODELS,
+    UNIT_MODEL_QV_MAX,
 )
 from .modbus import ModbusTcpClient
 from .models import MODEL_REGISTRY
@@ -58,6 +60,7 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             port = int(user_input[CONF_PORT])
             slave = int(user_input[CONF_SLAVE])
             scan_interval = int(user_input[CONF_SCAN_INTERVAL])
+            unit_model = user_input[CONF_UNIT_MODEL]
 
             # Unique ID to avoid duplicates
             await self.async_set_unique_id(f"{model_id}:{host.lower()}:{port}:{slave}")
@@ -78,6 +81,7 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: port,
                         CONF_SLAVE: slave,
                         CONF_SCAN_INTERVAL: scan_interval,
+                        CONF_UNIT_MODEL: unit_model,
                     },
                 )
 
@@ -86,6 +90,7 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_MODEL, default=SUPPORTED_MODELS[0]): vol.In(model_options),
+                vol.Required(CONF_UNIT_MODEL, default="Generic (legacy x3)"): vol.In(list(UNIT_MODEL_QV_MAX.keys())),
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
                 vol.Required(CONF_SLAVE, default=DEFAULT_SLAVE): vol.Coerce(int),

@@ -9,7 +9,8 @@
           "host": "IP address / hostname",
           "port": "Port",
           "slave": "Slave ID",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "unit_model": "Unit model (for estimated air flow)"
         }
       }
     },
