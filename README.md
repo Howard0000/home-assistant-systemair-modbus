@@ -2,27 +2,66 @@
 
 > [Read this guide in English](README.en.md)
 
-Dette er en **Home Assistant-integrasjon for Systemair SAVE-aggregater** via **Modbus TCP**.
+Dette er en **Home Assistant-integrasjon for Systemair SAVE-aggregater** med støtte for **Modbus TCP**.
 
-⚠️ Dette er et uoffisielt community-prosjekt og er ikke utviklet, støttet eller vedlikeholdt av Systemair.
+Integrasjonen gir strukturert overvåking og styring av ventilasjonsaggregatet i Home Assistant, med fokus på **riktig luftmengde, energieffektiv drift og stabil entitetshåndtering**.
+
+⚠️ **Merk:**  
+Dette er et **uoffisielt community-prosjekt** og er ikke utviklet, støttet eller vedlikeholdt av Systemair.
+
+---
+
+## 🏗️ Forutsetninger – aggregat og luftmengde
+
+Denne integrasjonen forutsetter at ventilasjonsanlegget er **korrekt prosjektert og dimensjonert**.
+
+- Aggregatet må være valgt basert på reell luftmengde (m³/h)
+- Luftmengder per sone må være riktig innregulert
+- Home Assistant erstatter **ikke** ventilasjonsprosjektering
+
+Integrasjonen bygger videre på aggregatets eksisterende konfigurasjon og gir:
+- oversikt
+- styring
+- automasjon
+
+Feil aggregatvalg eller feil luftmengder kan ikke kompenseres med programvare.
 
 ---
 
 ## ✨ Funksjoner
 
-- Full overvåking av ventilasjonsaggregatet
-  - Temperaturer, viftehastigheter, varmegjenvinning og alarmer
-- Modus- og hastighetsstyring
-  - Auto, Manuell (Lav / Normal / Høy), Party, Boost, Borte og Ferie
-- Innebygde **trykk-knapper (buttons)** for vanlige handlinger
-- **Trykkvakt (Pressure Guard)** vises som egen status (read-only sikkerhetsfunksjon)
-- Norsk og engelsk brukergrensesnitt (følger Home Assistant-språket)
+### Ventilasjon og drift
+- Visning av faktisk drift basert på aggregatets innstillinger
+- Temperaturer (ute, tilluft, avtrekk, ettervarme m.m.)
+- Viftehastigheter og driftsstatus
+- Varmegjenvinning
+- Filterstatus og alarmer
+
+### Energi og effektivitet
+- **Eco-modus**
+- Behovsstyring (der aggregatet støtter dette)
+- Borte- og Ferie-modus
+- Energieffektiv drift basert på belastning og konfigurasjon i aggregatet
+
+### Komfort
+- **Frikjøling (Free cooling)** når betingelser er oppfylt
+- Party- og Boost-modus
+- Manuell hastighetsstyring (Lav / Normal / Høy)
+
+### Brukeropplevelse
+- Norsk og engelsk språk (følger Home Assistant-språk)
+- Konsistente og stabile entiteter
+- Innebygde **buttons** for vanlige handlinger
 - Robust håndtering av midlertidig bortfall av Modbus-forbindelse
 
-Bildet under viser et eksempel på et Lovelace-kort som kan bygges manuelt i Home Assistant
-ved hjelp av entiteter fra denne integrasjonen. Selve kortet følger ikke med integrasjonen.
+---
 
+## 🖥️ Eksempel på Lovelace-kort
 
+Bildet under viser et eksempel på et Lovelace-kort bygget manuelt i Home Assistant
+ved hjelp av entiteter fra denne integrasjonen.
+
+> Selve kortet følger **ikke** med integrasjonen og bygges fritt etter egne preferanser.
 
 ![Ventilasjon Kort](image/Ventilasjon%20kort.png)
 
@@ -33,7 +72,9 @@ ved hjelp av entiteter fra denne integrasjonen. Selve kortet følger ikke med in
 ### Krav
 - Home Assistant **2024.6** eller nyere
 - Systemair SAVE med Modbus-tilgang
-- Modbus TCP (innebygd eller via ekstern gateway)
+- Modbus TCP  
+  - Innebygd i aggregatet **eller**
+  - Via ekstern gateway (f.eks. Elfin EW11)
 - HACS (Home Assistant Community Store)
 
 ### Installere integrasjonen
@@ -45,26 +86,24 @@ ved hjelp av entiteter fra denne integrasjonen. Selve kortet følger ikke med in
 6. Gå til **Innstillinger → Enheter og tjenester → Legg til integrasjon**
 7. Velg **Systemair Modbus** og fyll inn:
    - IP-adresse
-   - Port (vanligvis 502)
+   - Port (vanligvis `502`)
    - Modbus slave-ID
 
 ---
 
-## ℹ️ Viktig informasjon
+## ℹ️ Begrensninger og tekniske forhold
 
-### Trykkvakt (Pressure Guard)
-Trykkvakt er en **intern sikkerhetsfunksjon** i aggregatet og kan ikke manuelt aktiveres eller deaktiveres.
-Integrasjonen viser kun om trykkvakt er **aktiv / ikke aktiv**.
-
-### Stopp-funksjon
-Ikke alle Systemair-aggregater støtter full stopp via Modbus.
-Derfor kan **Stopp** være implementert som en *soft stop* (lav hastighet) der full stopp ikke er tilgjengelig.
+- **Trykkvakt (Pressure Guard)** er en intern sikkerhetsfunksjon i aggregatet  
+  → vises kun som status (read-only)
+- Ikke alle SAVE-modeller støtter full stopp via Modbus  
+  → der full stopp ikke er tilgjengelig, benyttes lavest mulige hastighet
+- Tilgjengelige funksjoner avhenger av aggregatmodell og konfigurasjon
 
 ---
 
 ## 🔌 Fysisk installasjon – Elfin EW11 (Modbus RTU → TCP)
 
-Denne seksjonen er relevant **dersom aggregatet ikke har innebygd Modbus TCP** og du bruker en ekstern gateway, f.eks. **Elfin EW11**.
+Denne delen er kun relevant dersom aggregatet **ikke har innebygd Modbus TCP**.
 
 ### ⚠️ ADVARSEL
 Koble alltid fra strømmen til ventilasjonsaggregatet før du åpner det.  
