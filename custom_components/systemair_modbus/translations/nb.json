@@ -265,8 +265,10 @@
           "host": "IP-adresse / vertsnavn",
           "port": "Port",
           "slave": "Slave-ID",
-          "scan_interval": "Oppdateringsintervall (sekunder)"
+          "scan_interval": "Oppdateringsintervall (sekunder)",
+          "unit_model": "Aggregatmodell (for estimert luftmengde)"
         }
+
       }
     },
     "error": {
