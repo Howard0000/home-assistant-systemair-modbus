@@ -9,22 +9,6 @@ Integrasjonen gir strukturert overvåking og styring av ventilasjonsaggregatet i
 ⚠️ **Merk:**  
 Dette er et **uoffisielt community-prosjekt** og er ikke utviklet, støttet eller vedlikeholdt av Systemair.
 
----
-
-## 🏗️ Forutsetninger – aggregat og luftmengde
-
-Denne integrasjonen forutsetter at ventilasjonsanlegget er **korrekt prosjektert og dimensjonert**.
-
-- Aggregatet må være valgt basert på reell luftmengde (m³/h)
-- Luftmengder per sone må være riktig innregulert
-- Home Assistant erstatter **ikke** ventilasjonsprosjektering
-
-Integrasjonen bygger videre på aggregatets eksisterende konfigurasjon og gir:
-- oversikt
-- styring
-- automasjon
-
-Feil aggregatvalg eller feil luftmengder kan ikke kompenseres med programvare.
 
 ---
 
@@ -53,6 +37,24 @@ Feil aggregatvalg eller feil luftmengder kan ikke kompenseres med programvare.
 - Konsistente og stabile entiteter
 - Innebygde **buttons** for vanlige handlinger
 - Robust håndtering av midlertidig bortfall av Modbus-forbindelse
+
+---
+
+
+## 🏗️ Forutsetninger – aggregat og luftmengde
+
+Denne integrasjonen forutsetter at ventilasjonsanlegget er **korrekt prosjektert og dimensjonert**.
+
+- Aggregatet må være valgt basert på reell luftmengde (m³/h)
+- Luftmengder per sone må være riktig innregulert
+- Home Assistant erstatter **ikke** ventilasjonsprosjektering
+
+Integrasjonen bygger videre på aggregatets eksisterende konfigurasjon og gir:
+- oversikt
+- styring
+- automasjon
+
+Feil aggregatvalg eller feil luftmengder kan ikke kompenseres med programvare.
 
 ---
 
