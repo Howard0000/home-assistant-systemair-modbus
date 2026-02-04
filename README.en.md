@@ -41,6 +41,43 @@ or maintained by Systemair**.
 
 ---
 
+## 📋 Systemair SAVE – supported models
+ 
+**Airflow estimation (m³/h)** is only available for models that are explicitly defined in the code.
+
+**Legend:**
+- ✅ = Yes / available  
+- ⚙️ = Supported, but not tested  
+- ❌ = Not available  
+
+> Have you tested the integration with a model that is not marked as tested?  
+> Please let me know by opening an Issue so this list can be updated.
+
+| Series | Model / Type | Modbus support | Airflow estimation (m³/h) | Tested |
+|--------|--------------|----------------|----------------------------|--------|
+| VSR | VSR 150/B | ✅ | ✅ | ❌ |
+| VSR | VSR 200/B | ✅ | ✅ | ❌ |
+| VSR | VSR 300 | ✅ | ✅ | ❌ |
+| VSR | VSR 400 | ✅ | ✅ | ❌ |
+| VSR | VSR 500 | ✅ | ✅ | ❌ |
+| VSR | VSR 700 | ✅ | ✅ | ❌ |
+| VTR | VTR 100/B | ✅ | ✅ | ❌ |
+| VTR | VTR 150/B | ✅ | ✅ | ❌ |
+| VTR | VTR 250/B | ✅ | ✅ | ❌ |
+| VTR | VTR 275/B | ✅ | ✅ | ❌ |
+| VTR | VTR 350/B | ✅ | ✅ | ❌ |
+| VTR | VTR 500 | ✅ | ✅ | ✅ |
+| VTR | VTR 700 | ✅ | ✅ | ❌ |
+| VTC | VTC 200–1 | ✅ | ❌ | ❌ |
+| VTC | VTC 300 | ✅ | ❌ | ❌ |
+| VTC | VTC 500 | ✅ | ❌ | ❌ |
+| VTC | VTC 700 | ✅ | ❌ | ❌ |
+| VSC | VSC 100 | ✅ | ❌ | ❌ |
+| VSC | VSC 200 | ✅ | ❌ | ❌ |
+| VSC | VSC 300 | ✅ | ❌ | ❌ |
+
+---
+
 ## 🏗️ Prerequisites – unit selection and airflow
 
 This integration assumes that the ventilation system is **properly designed
