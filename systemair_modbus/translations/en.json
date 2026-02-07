@@ -1,0 +1,292 @@
+{
+  "title": "Systemair Modbus",
+  "entity": {
+    "sensor": {
+      "mode_status_text": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "manual": "Manual",
+          "party": "Party",
+          "boost": "Boost",
+          "fireplace": "Fireplace",
+          "away": "Away",
+          "holiday": "Holiday",
+          "cooker_hood": "Cooker hood",
+          "vacuum_cleaner": "Vacuum cleaner",
+          "cdi1": "CDI1",
+          "cdi2": "CDI2",
+          "cdi3": "CDI3",
+          "pressure_guard": "Pressure guard",
+          "auto_low": "Auto – Low",
+          "auto_normal": "Auto – Normal",
+          "auto_high": "Auto – High",
+          "manual_stop": "Manual – Stop",
+          "manual_low": "Manual – Low",
+          "manual_normal": "Manual – Normal",
+          "manual_high": "Manual – High",
+          "manual_unknown": "Manual – Unknown",
+          "unknown": "Unknown"
+        }
+      },
+      "active_season": {
+        "name": "Active season",
+        "state": {
+          "summer": "Summer",
+          "winter": "Winter",
+          "unknown": "Unknown"
+        }
+      },
+      "next_filter_change": {
+        "name": "Next filter change"
+      },
+      "iaq_level_text": {
+        "name": "Air quality",
+        "state": {
+          "economy": "Economy",
+          "good": "Good",
+          "improve": "Needs improvement",
+          "unknown": "Unknown"
+        }
+      },
+      "regulation_mode_text": {
+        "name": "Regulation",
+        "state": {
+          "supply_air": "Supply air control",
+          "room": "Room control",
+          "exhaust": "Extract air control",
+          "unknown": "Unknown"
+        }
+      },
+      "exhaust_air_flow_rate": {
+        "name": "Exhaust airflow"
+      },
+      "supply_air_flow_rate": {
+        "name": "Supply airflow"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "supply_temperature": {
+        "name": "Supply air temperature"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust air temperature"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "saf_speed_rpm": {
+        "name": "Supply fan speed (RPM)"
+      },
+      "eaf_speed_rpm": {
+        "name": "Extract fan speed (RPM)"
+      },
+      "calculated_moisture_extraction": {
+        "name": "Calculated moisture extraction"
+      },
+      "calculated_moisture_intake": {
+        "name": "Calculated moisture intake"
+      },
+      "heat_recovery": {
+        "name": "Heat recovery"
+      }
+    },
+    "switch": {
+      "eco_mode": {
+        "name": "Eco mode"
+      },
+      "free_cooling": {
+        "name": "Free cooling"
+      }
+    },
+    "select": {
+      "mode_command": {
+        "name": "Mode selection"
+      },
+      "manual_speed": {
+        "name": "Manual fan speed"
+      },
+      "free_cooling_min_saf": {
+        "name": "Free cooling – min supply"
+      },
+      "free_cooling_min_eaf": {
+        "name": "Free cooling – min extract"
+      },
+      "manual_speed_command": {
+        "name": "Manual speed"
+      }
+    },
+    "number": {
+      "holiday_duration_days": {
+        "name": "Holiday duration (days)"
+      },
+      "away_duration_hours": {
+        "name": "Away duration (hours)"
+      },
+      "refresh_duration_minutes": {
+        "name": "Refresh duration (minutes)"
+      },
+      "crowded_duration_hours": {
+        "name": "Crowded duration (hours)"
+      },
+      "eco_heat_offset": {
+        "name": "Eco heat offset"
+      },
+      "supply_air_setpoint": {
+        "name": "Supply air setpoint (°C)"
+      },
+      "free_cooling_outdoor_min": {
+        "name": "Free cooling outdoor min (°C)"
+      },
+      "free_cooling_outdoor_max": {
+        "name": "Free cooling outdoor max (°C)"
+      },
+      "free_cooling_room_min": {
+        "name": "Free cooling room min (°C)"
+      },
+      "free_cooling_room_max": {
+        "name": "Free cooling room max (°C)"
+      },
+      "holiday_mode_duration": {
+        "name": "Holiday duration"
+      },
+      "away_mode_duration": {
+        "name": "Away duration"
+      },
+      "crowded_mode_duration": {
+        "name": "Party duration"
+      },
+      "refresh_mode_duration": {
+        "name": "Refresh duration"
+      },
+      "free_cooling_daytime_min_temp": {
+        "name": "Free cooling – daytime min temp"
+      },
+      "free_cooling_night_high_limit": {
+        "name": "Free cooling – night high limit"
+      },
+      "free_cooling_night_low_limit": {
+        "name": "Free cooling – night low limit"
+      },
+      "free_cooling_room_cancel_temp": {
+        "name": "Free cooling – room cancel temp"
+      },
+      "free_cooling_start_time_h": {
+        "name": "Free cooling – start (hour)"
+      },
+      "free_cooling_start_time_m": {
+        "name": "Free cooling – start (min)"
+      },
+      "free_cooling_end_time_h": {
+        "name": "Free cooling – end (hour)"
+      },
+      "free_cooling_end_time_m": {
+        "name": "Free cooling – end (min)"
+      }
+    },
+    "binary_sensor": {
+      "a_alarm": {
+        "name": "A alarm"
+      },
+      "b_alarm": {
+        "name": "B alarm"
+      },
+      "c_alarm": {
+        "name": "C alarm"
+      },
+      "filter_alarm_active": {
+        "name": "Filter alarm"
+      },
+      "filter_warning_active": {
+        "name": "Filter warning"
+      },
+      "filter_alarm": {
+        "name": "Filter alarm"
+      },
+      "filter_warning_alarm": {
+        "name": "Filter warning"
+      },
+      "free_cooling_active": {
+        "name": "Free cooling active"
+      },
+      "cooker_hood_active": {
+        "name": "Cooker hood active"
+      },
+      "eco_function_active": {
+        "name": "Eco function active"
+      },
+      "pressure_guard_active": {
+        "name": "Pressure guard active"
+      }
+    },
+    "climate": {
+      "climate": {
+        "name": "Ventilation"
+      }
+    },
+    "button": {
+      "set_auto": {
+        "name": "Auto"
+      },
+      "set_away": {
+        "name": "Away"
+      },
+      "set_holiday": {
+        "name": "Holiday"
+      },
+      "set_party": {
+        "name": "Party"
+      },
+      "set_boost": {
+        "name": "Boost"
+      },
+      "fan_low": {
+        "name": "Low"
+      },
+      "fan_normal": {
+        "name": "Normal"
+      },
+      "fan_high": {
+        "name": "High"
+      },
+      "fan_stop": {
+        "name": "Stop"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Systemair SAVE (Modbus)",
+        "description": "Set up Systemair ventilation via Modbus TCP.",
+        "data": {
+          "model": "Model",
+          "host": "IP address / hostname",
+          "port": "Port",
+          "slave": "Slave ID",
+          "scan_interval": "Scan interval (seconds)",
+          "unit_model": "Unit model (for estimated air flow)"
+        }
+
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check host/port/slave and that Modbus TCP is enabled.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This device is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    }
+  }
+}
