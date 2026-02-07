@@ -16,10 +16,8 @@ class SystemairBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._entry = entry
 
-        self._uid_base = entry.unique_id or entry.entry_id
-
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Systemair",
             name=entry.title,
         )

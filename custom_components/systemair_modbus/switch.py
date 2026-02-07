@@ -14,13 +14,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
     client = data["client"]
-    model = data["model"]
+    model = coordinator.model
 
-    entities: list[SwitchEntity] = [
-        EcoModeSwitch(entry, coordinator, client, model),
-        FreeCoolingSwitch(entry, coordinator, client, model),
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            EcoModeSwitch(entry, coordinator, client, model),
+            FreeCoolingSwitch(entry, coordinator, client, model),
+        ]
+    )
 
 
 class EcoModeSwitch(SystemairBaseEntity, SwitchEntity):
@@ -32,7 +33,7 @@ class EcoModeSwitch(SystemairBaseEntity, SwitchEntity):
         super().__init__(entry, coordinator)
         self._client = client
         self._model = model
-        self._attr_unique_id = f"{self._uid_base}_eco_mode_switch"
+        self._attr_unique_id = f"{entry.entry_id}_eco_mode_switch"
 
     @property
     def is_on(self) -> bool | None:
@@ -53,14 +54,14 @@ class EcoModeSwitch(SystemairBaseEntity, SwitchEntity):
 
 class FreeCoolingSwitch(SystemairBaseEntity, SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_translation_key = "free_cooling_enable"
+    _attr_translation_key = "free_cooling"
     _attr_icon = "mdi:snowflake"
 
     def __init__(self, entry: ConfigEntry, coordinator, client, model) -> None:
         super().__init__(entry, coordinator)
         self._client = client
         self._model = model
-        self._attr_unique_id = f"{self._uid_base}_free_cooling_switch"
+        self._attr_unique_id = f"{entry.entry_id}_free_cooling_switch"
 
     @property
     def is_on(self) -> bool | None:
