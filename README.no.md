@@ -1,6 +1,7 @@
 # Home Assistant – Systemair Modbus (SAVE)
 
-> [Read this guide in English](README.en.md)
+**English** · [Read in English](README.md)
+
 
 Dette er en **Home Assistant-integrasjon for Systemair SAVE-aggregater** med støtte for **Modbus TCP**.
 
