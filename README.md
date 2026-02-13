@@ -2,6 +2,8 @@
 
 **Norsk** · [Les på norsk](README.no.md)
 
+[![HACS](https://img.shields.io/badge/HACS-Default-green.svg)](https://hacs.xyz/)
+
 This is a **Home Assistant integration for Systemair SAVE air handling units**
 with support for **Modbus TCP**.
 
@@ -44,7 +46,7 @@ or maintained by Systemair**.
 ---
 
 ## 📋 Systemair SAVE – supported models
- 
+
 **Airflow estimation (m³/h)** is only available for models that are explicitly defined in the code.
 
 **Legend:**
@@ -151,7 +153,6 @@ using entities provided by this integration.
    - IP address
    - Port (usually `502`)
    - Modbus slave ID
-
 
 ---
 
