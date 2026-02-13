@@ -119,17 +119,39 @@ using entities provided by this integration.
   - Via an external gateway (e.g. Elfin EW11)
 - HACS (Home Assistant Community Store)
 
-### Installing the integration
-1. Go to **HACS → Integrations**
-2. Select **Custom repositories**
-3. Add this repository as an **Integration**
-4. Install **Systemair Modbus**
+---
+
+### Method 1: Install via HACS (recommended)
+
+1. Open **HACS**
+2. Go to **Integrations**
+3. Search for **Systemair Modbus**
+4. Click **Download**
 5. Restart Home Assistant
 6. Go to **Settings → Devices & Services → Add integration**
 7. Select **Systemair Modbus** and enter:
    - IP address
    - Port (usually `502`)
    - Modbus slave ID
+
+---
+
+### Method 2: Install as a custom repository (manual)
+
+> This method is mainly intended for development, testing, or early access to changes.
+
+1. Open **HACS**
+2. Go to **Integrations**
+3. Open the menu (three dots) → **Custom repositories**
+4. Add this repository as an **Integration**
+5. Install **Systemair Modbus**
+6. Restart Home Assistant
+7. Go to **Settings → Devices & Services → Add integration**
+8. Select **Systemair Modbus** and enter:
+   - IP address
+   - Port (usually `502`)
+   - Modbus slave ID
+
 
 ---
 
