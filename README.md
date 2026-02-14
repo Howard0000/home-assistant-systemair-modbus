@@ -1,6 +1,6 @@
 # Home Assistant – Systemair Modbus (SAVE)
 
-**Norsk** · [Les på norsk](README.no.md)
+**English** · [Les på norsk](README.no.md)
 
 [![HACS](https://img.shields.io/badge/HACS-Default-green.svg)](https://hacs.xyz/)
 
