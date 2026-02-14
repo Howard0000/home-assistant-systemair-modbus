@@ -37,6 +37,7 @@ UNIT_MODEL_QV_MAX: dict[str, int | None] = {
     "VTR 150/B": 268,  # typical (variants exist)
     "VTR 250/B": 307,
     "VTR 275/B": 316,
+    "VTR 300": 368,
     "VTR 350/B": 504,
     "VTR 500": 572,
     "VTR 700": 951,
