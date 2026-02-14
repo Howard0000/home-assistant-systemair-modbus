@@ -61,10 +61,10 @@ If in doubt, consult a qualified technician.
 - ⚙️ = Supported, but not tested  
 - ❌ = Not available  
 
-> ⚠️ Note: Older units with **CD4 controller** may use a different Modbus register map than units with **SAVE Touch**.  
+> ⚠️ Note: Older units with **CD4 controller** may use a different Modbus register map than units with **SAVE Touch**.
 > These units are not fully verified yet and may require adjustments. Please open an Issue if you test such a unit.
 
-> Have you tested the integration with a model that is not marked as tested?  
+> Have you tested the integration with a model that is not marked as tested?
 > Please let me know by opening an Issue so this list can be updated.
 
 | Series | Model / Type | Modbus support | Airflow estimation (m³/h) | Tested |
@@ -79,7 +79,7 @@ If in doubt, consult a qualified technician.
 | VTR | VTR 150/B | ✅ | ✅ | ❌ |
 | VTR | VTR 250/B | ✅ | ✅ | ❌ |
 | VTR | VTR 275/B | ✅ | ✅ | ❌ |
-| VTR | VTR 300 | ✅ | ✅ | ⚙️ |
+| VTR | VTR 300 | ✅ | ✅ | ✅ |
 | VTR | VTR 350/B | ✅ | ✅ | ❌ |
 | VTR | VTR 500 | ✅ | ✅ | ✅ |
 | VTR | VTR 700 | ✅ | ✅ | ❌ |
@@ -91,8 +91,9 @@ If in doubt, consult a qualified technician.
 | VSC | VSC 200 | ✅ | ❌ | ❌ |
 | VSC | VSC 300 | ✅ | ❌ | ❌ |
 
-> ⚙️ VTR 300: Reported working by a community user, but exact variant (SAVE Touch vs CD4) is not yet confirmed.  
-> ✅ VTR 500: Confirmed working by a community user (tested with external Modbus TCP gateway).
+> ✅ VTR 300: Confirmed working by a community user (**SAVE Touch**, original Systemair Modbus gateway, Modbus TCP).  
+> ✅ VTR 500: Confirmed working by a community user (tested with external Modbus TCP gateway).  
+> ⚠️ CD4 units: Not verified yet and may require a different register map.
 
 ---
 
