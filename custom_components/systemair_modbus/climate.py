@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode, HVACAction
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -54,7 +54,7 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
         self._attr_target_temperature_step = 0.5
 
         self._attr_preset_modes = list(PRESET_TO_COMMAND_MODE.keys())
-        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.FAN_ONLY]
+        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.FAN_ONLY, HVACMode.HEAT]
         if self._stop_allowed():
             self._attr_hvac_modes.append(HVACMode.OFF)
 
@@ -81,11 +81,28 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
         return allowed == 1
 
     @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac operation."""
+        # Check the triac register for heating activity
+        triac_val = self._get_int("triac_after_manual_override", 0)
+        if triac_val > 0:
+            return HVACAction.HEATING
+        
+        # If not heating, check if it's off or just circulating air
+        if self.hvac_mode == HVACMode.OFF:
+            return HVACAction.OFF
+        return HVACAction.FAN
+
+    @property
     def hvac_mode(self) -> HVACMode:
-        # Off if manual speed command is 0 (and allowed), otherwise AUTO/FAN_ONLY based on mode status
         man = self._get_int("manual_mode_command_register", 3)
         if man == 0 and self._stop_allowed():
             return HVACMode.OFF
+
+        # If triac is active, show as HEAT mode in the UI
+        triac_val = self._get_int("triac_after_manual_override", 0)
+        if triac_val > 0:
+            return HVACMode.HEAT
 
         mode = self._get_int("mode_status_register", 0)
         if mode == 0:
@@ -97,7 +114,7 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
             if not self._stop_allowed():
                 return
             await self._client.write_register(self._model.ADDR_MANUAL_SPEED_COMMAND, 0)
-        elif hvac_mode == HVACMode.AUTO:
+        elif hvac_mode in [HVACMode.AUTO, HVACMode.HEAT]:
             await self._client.write_register(self._model.ADDR_MODE_COMMAND, PRESET_TO_COMMAND_MODE["Auto"])
         elif hvac_mode == HVACMode.FAN_ONLY:
             # Keep current mode, but ensure manual speed not 0

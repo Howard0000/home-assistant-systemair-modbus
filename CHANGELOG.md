@@ -26,3 +26,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - This is an unofficial community integration and is not affiliated with Systemair
 
 
+## FORK Ztaeyn: Contributions from own project for owner of project to contemplate
+
+- Climate: Added HVAC.Heating, animating the Climate entity in HA to turn red and display heating. (This was a wanted feature in my own project)
+
+
+
