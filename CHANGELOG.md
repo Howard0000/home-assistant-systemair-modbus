@@ -30,5 +30,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 - Climate: Added HVAC.Heating, animating the Climate entity in HA to turn red and display heating. (This was a wanted feature in my own project)
 
+### TODO
+- Weekly Schedule
+  Enable and configure fan settings for 2 periods per day. 
 
+- Estimated power usage from the heating element / TRIAC. Sensor.py
+  This might differ from the models. Some doesn't have the heater, others might have a bigger one?
+
+- Fireplace mode. 
 
