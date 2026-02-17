@@ -1,7 +1,6 @@
 """Systemair SAVE model (register map + derived values).
 
-Generated from the last known 100% working "gammel" version.
-Internal keys are taken from old unique_id/name (without model-specific prefix).
+All addresses in this file are Modbus client offsets (PDF address - 1)
 """
 from __future__ import annotations
 
@@ -151,14 +150,14 @@ class SaveModel:
         RegisterDef(key='fan_speed_comp_winter', address=1251, input_type='holding', data_type='int16', unit='%', device_class='power_factor'),
         RegisterDef(key='fan_speed_comp_checked', address=1252, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='fan_speed_comp_winter_max_temp', address=1253, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
-        RegisterDef(key='fan_speed_comp_read', address=1254, input_type='holding', data_type='int16', unit='%', device_class='power_factor'),
+        #RegisterDef(key='fan_speed_comp_read', address=1254, input_type='holding', data_type='int16', unit='%', device_class='power_factor'),
         RegisterDef(key='fan_speed_comp_winter_start_temp', address=1255, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='fan_speed_comp_summer_start_temp', address=1256, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='fan_speed_comp_max_temp', address=1257, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='fan_speed_comp_summer', address=1258, input_type='holding', data_type='int16', unit='%', device_class='power_factor'),
         RegisterDef(key='saf_speed_low', address=1302, input_type='holding', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_low', address=1303, input_type='holding', data_type='uint16', unit='rpm'),
-        RegisterDef(key='fan_manual_stop_allowed_reg', address=1352, input_type='holding', data_type='uint16'),
+        #RegisterDef(key='fan_manual_stop_allowed_reg', address=1352, input_type='holding', data_type='uint16'),
         RegisterDef(key='saf_speed_minimum_rpm', address=1410, input_type='holding', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_minimum_rpm', address=1411, input_type='holding', data_type='uint16', unit='rpm'),
         RegisterDef(key='saf_speed_low_rpm', address=1412, input_type='holding', data_type='uint16', unit='rpm'),
