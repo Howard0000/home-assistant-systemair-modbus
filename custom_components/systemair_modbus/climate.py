@@ -54,7 +54,7 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
         self._attr_target_temperature_step = 0.5
 
         self._attr_preset_modes = list(PRESET_TO_COMMAND_MODE.keys())
-        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.FAN_ONLY, HVACMode.HEAT]
+        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.FAN_ONLY]
         if self._stop_allowed():
             self._attr_hvac_modes.append(HVACMode.OFF)
 
@@ -99,11 +99,6 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
         if man == 0 and self._stop_allowed():
             return HVACMode.OFF
 
-        # If triac is active, show as HEAT mode in the UI
-        triac_val = self._get_int("triac_after_manual_override", 0)
-        if triac_val > 0:
-            return HVACMode.HEAT
-
         mode = self._get_int("mode_status_register", 0)
         if mode == 0:
             return HVACMode.AUTO
@@ -114,7 +109,7 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
             if not self._stop_allowed():
                 return
             await self._client.write_register(self._model.ADDR_MANUAL_SPEED_COMMAND, 0)
-        elif hvac_mode in [HVACMode.AUTO, HVACMode.HEAT]:
+        elif hvac_mode == HVACMode.AUTO:
             await self._client.write_register(self._model.ADDR_MODE_COMMAND, PRESET_TO_COMMAND_MODE["Auto"])
         elif hvac_mode == HVACMode.FAN_ONLY:
             # Keep current mode, but ensure manual speed not 0

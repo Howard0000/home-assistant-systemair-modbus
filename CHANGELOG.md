@@ -27,6 +27,5 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 
 ### Community attribution up for approval:
-- Climate entity: Added "HVAC.Heating", animating the Climate controller to display the temperature arc with a red hue with the status "heating".
-
-
+- Added "hvac_action", (Heating / Fan / Off) based on TRIAC register (heating element)
+    
