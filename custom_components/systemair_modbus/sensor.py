@@ -48,14 +48,12 @@ def _pretty_reg_name(key: str) -> str:
         "filter_warning_alarm": "Filter warning",
         "calculated_moisture_extraction": "Calculated moisture extraction",
         "calculated_moisture_intake": "Calculated moisture intake",
-
         # Duration / timers
         "refresh_mode_duration": "Refresh mode – duration",
         "fireplace_mode_duration": "Fireplace mode – duration",
         "holiday_mode_duration": "Holiday mode – duration",
         "away_mode_duration": "Away mode – duration",
         "crowded_mode_duration": "Crowded mode – duration",
-
         # Free cooling (night cooling)
         "free_cooling_active": "Free cooling active",
         "free_cooling_daytime_min_temp": "Free cooling – daytime min temp",
@@ -68,17 +66,13 @@ def _pretty_reg_name(key: str) -> str:
         "free_cooling_end_time_m": "Free cooling – end (minute)",
         "free_cooling_min_speed_saf": "Free cooling – min SAF speed",
         "free_cooling_min_speed_eaf": "Free cooling – min EAF speed",
-
         # Filters
         "filter_replacement_alarm": "Filter replacement alarm",
         "filter_replacement_period": "Filter replacement interval",
-        "filter_warning_alarm": "Filter warning",
         "filter_warning_alarm_delay_count": "Filter warning – delay",
-
         # Speeds (common)
         "saf_speed_rpm": "SAF fan speed (RPM)",
         "eaf_speed_rpm": "EAF fan speed (RPM)",
-
         # Season / operation
         "summer_winter_operation_1_0": "Summer/winter operation",
     }
@@ -133,7 +127,7 @@ def _suggested_object_id(key: str) -> str:
     s = re.sub(r"[^a-z0-9_]+", "_", s).strip("_")
     if not s:
         s = "value"
-    # Always prefix with save_ for a consistent namespace in entity_id
+    # Keep consistent namespace (historical reasons); entity_id will be stable after first create.
     return f"save_{s}"
 
 
@@ -144,7 +138,6 @@ def _base_key(key: str) -> str:
 
 # Raw register sensors: keep only the most useful enabled by default.
 # Everything else is still available, but hidden by default to reduce noise in the UI.
-
 ENABLED_RAW_KEYS: set[str] = {
     # Temperatures
     "outdoor_temperature",
@@ -179,13 +172,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     entities: list[SensorEntity] = []
 
-    # Raw register-backed sensors (1:1 from the known working register map)
+    # Raw register-backed sensors (1:1 from the model register map)
     for reg in model.REGISTERS:
         entities.append(SystemairRegisterSensor(coordinator, entry, reg))
 
-    # Derived sensors
-    for d in DERIVED:
-        entities.append(SystemairDerivedSensor(coordinator, entry, d["key"], d.get("icon"), d.get("unit")))
+    # Derived sensors (SAVE only)
+    if getattr(model, "model_id", None) != "legacy_cd4":
+        for d in DERIVED:
+            entities.append(SystemairDerivedSensor(coordinator, entry, d["key"], d.get("icon"), d.get("unit")))
 
     async_add_entities(entities)
 
@@ -195,26 +189,28 @@ class SystemairRegisterSensor(SystemairBaseEntity, SensorEntity):
         super().__init__(entry, coordinator)
         self._key = reg.key
 
-        # Deterministic unique_id (OK that history breaks right now)
+        # Deterministic unique_id
         self._attr_unique_id = f"{entry.entry_id}_reg_{reg.key}"
         self._attr_suggested_object_id = _suggested_object_id(reg.key)
 
         base_key = _base_key(reg.key)
+        is_cd4 = getattr(coordinator.model, "model_id", None) == "legacy_cd4"
+
         if base_key in ENABLED_RAW_KEYS:
             self._attr_translation_key = base_key
         else:
             self._attr_name = _pretty_reg_name(reg.key)
 
-        # Hide most raw registers by default (they are still available in the entity registry).
-        if base_key not in ENABLED_RAW_KEYS:
+        # SAVE: hide most raw registers by default. CD4: show all.
+        if (not is_cd4) and base_key not in ENABLED_RAW_KEYS:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 
-        if reg.unit:
+        if getattr(reg, "unit", None):
             self._attr_native_unit_of_measurement = reg.unit
-        if reg.device_class:
+        if getattr(reg, "device_class", None):
             self._attr_device_class = reg.device_class
-        if reg.state_class:
+        if getattr(reg, "state_class", None):
             self._attr_state_class = reg.state_class
 
     @property
@@ -229,6 +225,7 @@ class SystemairDerivedSensor(SystemairBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_derived_{key}"
         self._attr_suggested_object_id = _suggested_object_id(key)
         self._attr_translation_key = key
+
         if icon:
             self._attr_icon = icon
         if unit:
