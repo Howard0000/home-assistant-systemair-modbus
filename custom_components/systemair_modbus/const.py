@@ -17,7 +17,7 @@ PLATFORMS: list[str] = ["sensor", "binary_sensor", "switch", "select", "number",
 
 # Modell-IDer må matche models/*.py
 MODEL_SAVE = "save"
-SUPPORTED_MODELS = [MODEL_SAVE]
+SUPPORTED_MODELS = ["save", "legacy_cd4"]
 CONF_UNIT_MODEL = "unit_model"
 
 # Nominal max air flow (qv max) per unit model (m³/h). Used for *estimated* air flow rate derived sensors.
@@ -37,7 +37,6 @@ UNIT_MODEL_QV_MAX: dict[str, int | None] = {
     "VTR 150/B": 268,  # typical (variants exist)
     "VTR 250/B": 307,
     "VTR 275/B": 316,
-    "VTR 300": 368,
     "VTR 350/B": 504,
     "VTR 500": 572,
     "VTR 700": 951,

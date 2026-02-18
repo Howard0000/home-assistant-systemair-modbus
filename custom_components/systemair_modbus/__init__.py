@@ -1,4 +1,3 @@
-"""Systemair Modbus integration."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +17,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     UNIT_MODEL_QV_MAX,
 )
+
+PLATFORMS_LEGACY_CD4 = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,14 +49,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
         "coordinator": coordinator,
+        # lagre hvilke plattformer vi faktisk lastet (brukes ved unload)
+        "platforms": PLATFORMS_LEGACY_CD4 if model_id == "legacy_cd4" else list(PLATFORMS),
     }
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    platforms = hass.data[DOMAIN][entry.entry_id]["platforms"]
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # Bruk samme plattformer som ble lastet
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    platforms = data.get("platforms", PLATFORMS)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
 
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id, {})
