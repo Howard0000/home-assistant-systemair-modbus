@@ -7,6 +7,27 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ---
 
+## [1.1.0] – 2026-02-18
+### 🧹 Register cleanup and fixes (SAVE)
+
+### Changed
+- Cleaned up and corrected the SAVE register map
+- Fixed several incorrect or inconsistent register definitions (address/type/scale)
+- Improved internal consistency in register handling
+
+### Added
+- Added `hvac_action` (Heating / Fan / Off) based on TRIAC register (heating element) — community contribution
+
+### Fixed
+- Climate heating state handling (removed invalid heating MODE)
+- UI/HA semantics for climate state now reflect actual device state
+
+### Notes
+- No CD4 legacy support in this release (still under testing)
+- This release focuses on correctness and stability of the SAVE register map
+
+---
+
 ## [1.0.0] – 2026-02-13
 ### 🚀 First stable HACS release
 
@@ -25,7 +46,3 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Notes
 - This is an unofficial community integration and is not affiliated with Systemair
 
-
-### Community attribution up for approval:
-- Added "hvac_action", (Heating / Fan / Off) based on TRIAC register (heating element)
-    
