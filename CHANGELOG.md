@@ -26,3 +26,6 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - This is an unofficial community integration and is not affiliated with Systemair
 
 
+### Community attribution up for approval:
+- Added "hvac_action", (Heating / Fan / Off) based on TRIAC register (heating element)
+    
