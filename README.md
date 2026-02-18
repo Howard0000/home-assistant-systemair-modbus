@@ -61,12 +61,24 @@ If in doubt, consult a qualified technician.
 - ⚙️ = Supported, but not tested  
 - ❌ = Not available  
 
-> ⚠️ Note: Older units with **CD4 controller** use a different Modbus register map than **SAVE Touch** units.
-> CD4 support is still under development and is **not included in the current stable release**.
-> If you test such a unit, please open an Issue and share your findings.
+---
 
-> Have you tested the integration with a model that is not marked as tested?
-> Please let me know by opening an Issue so this list can be updated.
+### 🧪 CD4 (legacy) – beta testing
+
+Older units with **CD4 controller** use a different Modbus register map than **SAVE Touch** units.  
+CD4 support is **under active development** and is **not included in the current stable release**.
+
+A **beta / pre-release** is available for testing against CD4 units:
+
+👉 https://github.com/Howard0000/home-assistant-systemair-modbus/releases/tag/v0.1.0-cd4
+
+**Important:**
+- This is an **early test version** intended for verification only
+- It currently **reads data only** (no control)
+- Please report findings via **GitHub Issues** (model, year, controller, what works / doesn’t)
+
+If you have a CD4-based unit and are willing to test, your feedback is extremely valuable for finalizing proper CD4 support.
+
 
 | Series | Model / Type | Modbus support | Airflow estimation (m³/h) | Tested |
 |--------|--------------|----------------|----------------------------|--------|
@@ -94,7 +106,7 @@ If in doubt, consult a qualified technician.
 
 > ✅ VTR 300: Confirmed working by a community user (**SAVE Touch**, original Systemair Modbus gateway, Modbus TCP).  
 > ✅ VTR 500: Confirmed working by a community user (tested with external Modbus TCP gateway).  
-> ⚠️ CD4 units: Not verified yet and may require a different register map.
+
 
 ---
 
