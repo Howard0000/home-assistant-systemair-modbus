@@ -57,8 +57,9 @@ Er du i tvil, kontakt kvalifisert fagperson.
 - ⚙️ = Støttet, men ikke testet  
 - ❌ = Ikke tilgjengelig  
 
-> ⚠️ Merk: Eldre enheter med **CD4-kontroller** kan bruke et annet Modbus-registerkart enn enheter med **SAVE Touch**.  
-> Disse er foreløpig ikke fullt verifisert og kan kreve justeringer. Opprett gjerne en Issue hvis du tester en slik enhet.
+> ⚠️ Merk: Eldre enheter med **CD4-kontroller** bruker et annet Modbus-registerkart enn enheter med **SAVE Touch**.  
+> Støtte for CD4 er fortsatt under utvikling og er **ikke inkludert i nåværende stabile release**.  
+> Hvis du tester en slik enhet, opprett gjerne en Issue og del erfaringene dine.
 
 > Har du testet integrasjonen med en modell som ikke er merket som testet?  
 > Gi gjerne beskjed ved å opprette en Issue, så kan denne listen oppdateres.
@@ -232,9 +233,12 @@ Når kommunikasjonen er bekreftet, kan IP-adressen brukes direkte i Home Assista
 Installasjonsveiledningen for Elfin EW11 (Modbus RTU → TCP) er basert på arbeid publisert på
 [domotics.no](https://www.domotics.no/), skrevet av **Mads Nedrehagen**.
 
+Spesiell takk til **Ztaeyn** for bidrag til forbedret håndtering av klimastatus (`hvac_action`) basert på TRIAC-registeret.
+
 En KI-assistent har blitt brukt som støtte til feilsøking, refaktorering og forbedring av dokumentasjon under utviklingen.
 
 Denne integrasjonen er **selvstendig utviklet** som en moderne Home Assistant-integrasjon.
+
 
 ---
 
