@@ -196,9 +196,6 @@ class SaveModel:
         # Legacy/variant registers kept for backwards compatibility (not in all official PDFs)
         RegisterDef(key='calculated_moisture_extraction', address=2210, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
         RegisterDef(key='calculated_moisture_intake', address=2211, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
-
-        RegisterDef(key='calculated_moisture_extraction', address=2210, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
-        RegisterDef(key='calculated_moisture_intake', address=2211, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
         
         RegisterDef(key='eco_heat_offset', address=2503, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C'),
         RegisterDef(key='eco_mode', address=2504, input_type='holding', data_type='uint16'),
