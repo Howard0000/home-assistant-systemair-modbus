@@ -110,8 +110,9 @@ class ModbusTcpClient:
             if data_type == "uint16":
                 return registers[idx] & 0xFFFF
             if data_type == "uint32":
-                hi = registers[idx] & 0xFFFF
-                lo = registers[idx + 1] & 0xFFFF
+                # Systemair uses L/H register pairs: addr=low word, addr+1=high word
+                lo = registers[idx] & 0xFFFF
+                hi = registers[idx + 1] & 0xFFFF
                 return (hi << 16) | lo
         except Exception:  # noqa: BLE001
             return None
