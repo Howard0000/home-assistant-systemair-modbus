@@ -7,6 +7,20 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ---
 
+## [1.1.1] – 2026-02-19
+### 🐛 Bugfix release
+
+### Fixed
+- Fixed 500 error in Options / settings dialog (Config Flow options now open correctly)
+- Removed duplicate entries in the Modbus register list
+- Minor internal cleanup related to options handling
+
+### Notes
+- This is a maintenance release with no functional changes to entities or services
+- Recommended update for all users (restores ability to change scan interval from UI)
+  
+---
+
 ## [1.1.0] – 2026-02-18
 ### 🧹 Register cleanup and fixes (SAVE)
 
