@@ -128,25 +128,22 @@ class SaveModel:
     MODE_STATUS_TO_LABEL = STATUS_MODE_TO_LABEL
 
     REGISTERS: list[RegisterDef] = [
-        # --- Modus og tidsinnstillinger ---
+        # --- Modes and time settings ---
         RegisterDef(key='summer_winter_operation_1_0', address=1038, input_type='input', data_type='uint16'),
         RegisterDef(key='holiday_mode_duration', address=1100, input_type='holding', data_type='uint16', unit='days'),
         RegisterDef(key='away_mode_duration', address=1101, input_type='holding', data_type='uint16', unit='h'),
         RegisterDef(key='fireplace_mode_duration', address=1102, input_type='holding', data_type='uint16', unit='min'),
         RegisterDef(key='refresh_mode_duration', address=1103, input_type='holding', data_type='uint16', unit='min'),
         RegisterDef(key='crowded_mode_duration', address=1104, input_type='holding', data_type='uint16', unit='h'),
-
-        # --- Nedtelling (L/H par på 1110/1111 - defineres som én uint32) ---
         RegisterDef(key='countdown_mode_time', address=1110, input_type='input', data_type='uint32', unit='s'),
 
-        # --- Systemstatus ---
+        # --- System status ---
         RegisterDef(key='iaq_level', address=1122, input_type='input', data_type='uint16'),
         RegisterDef(key='manual_mode_command_register', address=1130, input_type='holding', data_type='uint16'),
-        RegisterDef(key='fan_manual_stop_allowed_register', address=1352, input_type='holding', data_type='uint16'),
         RegisterDef(key='mode_status_register', address=1160, input_type='input', data_type='uint16'),
         RegisterDef(key='mode_command_register', address=1161, input_type='holding', data_type='uint16'),
 
-        # --- CDI-hastigheter (IR = input) ---
+        # --- CDI speeds (IR = input) ---
         RegisterDef(key='saf_speed_holiday', address=1220, input_type='input', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_holiday', address=1221, input_type='input', data_type='uint16', unit='rpm'),
         RegisterDef(key='saf_speed_cooker_hood', address=1222, input_type='input', data_type='uint16', unit='rpm'),
@@ -154,21 +151,24 @@ class SaveModel:
         RegisterDef(key='saf_speed_vacuumcleaner', address=1224, input_type='input', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_vacuumcleaner', address=1225, input_type='input', data_type='uint16', unit='rpm'),
 
-        # --- Utendørskompensering ---
+        # --- Outdoor compensation ---
         RegisterDef(key='fan_speed_comp_winter', address=1251, input_type='holding', data_type='uint16', unit='%'),
-        RegisterDef(key='fan_speed_comp_checked', address=1252, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='fan_speed_comp_winter_max_temp', address=1253, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
+        RegisterDef(key='fan_speed_comp_checked', address=1252, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='fan_speed_comp_winter_max_temp', address=1253, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='fan_speed_comp_read', address=1254, input_type='input', data_type='uint16', unit='%'),
-        RegisterDef(key='fan_speed_comp_winter_start_temp', address=1255, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='fan_speed_comp_summer_start_temp', address=1256, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='fan_speed_comp_max_temp', address=1257, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
+        RegisterDef(key='fan_speed_comp_winter_start_temp', address=1255, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='fan_speed_comp_summer_start_temp', address=1256, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='fan_speed_comp_max_temp', address=1257, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='fan_speed_comp_summer', address=1258, input_type='holding', data_type='uint16', unit='%'),
 
-        # --- Viftenivåer status ---
+        # --- Fan level status ---
         RegisterDef(key='saf_speed_low', address=1302, input_type='input', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_low', address=1303, input_type='input', data_type='uint16', unit='rpm'),
 
-        # --- Viftegrenser RPM ---
+        # --- System status / permissions ---
+        RegisterDef(key='fan_manual_stop_allowed_register', address=1352, input_type='holding', data_type='uint16'),
+
+        # --- Fan limits (RPM) ---
         RegisterDef(key='saf_speed_minimum_rpm', address=1410, input_type='holding', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_minimum_rpm', address=1411, input_type='holding', data_type='uint16', unit='rpm'),
         RegisterDef(key='saf_speed_low_rpm', address=1412, input_type='holding', data_type='uint16', unit='rpm'),
@@ -180,36 +180,30 @@ class SaveModel:
         RegisterDef(key='saf_speed_maximum', address=1418, input_type='holding', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_maximum', address=1419, input_type='holding', data_type='uint16', unit='rpm'),
 
-        # --- Temperaturinnstillinger ---
-        RegisterDef(key='supply_air_sp', address=2000, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='exhaust_air_sp', address=2012, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='exhaust_air_min_sp', address=2020, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='exhaust_air_max_sp', address=2021, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C'),
+        # --- Temperature settings ---
+        RegisterDef(key='supply_air_sp', address=2000, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='exhaust_air_sp', address=2012, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='exhaust_air_min_sp', address=2020, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='exhaust_air_max_sp', address=2021, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='supply_air_room_exhaust_reg', address=2030, input_type='holding', data_type='uint16'),
 
-        # --- Varme og fukt ---
+        # --- Heating and humidity ---
         RegisterDef(key='triac_after_manual_override', address=2148, input_type='input', data_type='uint16', unit='%'),
-
-        # ✅ RETTET: dette er fukt i %, ikke temperatur
         RegisterDef(key='moisture_extraction_sp', address=2202, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
-
-        # Legacy/variant registers kept for backwards compatibility (not in all official PDFs)
         RegisterDef(key='calculated_moisture_extraction', address=2210, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
         RegisterDef(key='calculated_moisture_intake', address=2211, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
-        
-        RegisterDef(key='eco_heat_offset', address=2503, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C'),
+
+        # --- Eco ---
+        RegisterDef(key='eco_heat_offset', address=2503, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='eco_mode', address=2504, input_type='holding', data_type='uint16'),
         RegisterDef(key='eco_function_active', address=2505, input_type='input', data_type='uint16'),
 
         # --- Free Cooling ---
         RegisterDef(key='free_cooling_enable', address=4100, input_type='holding', data_type='uint16'),
-
-        # ✅ RETTET: temperaturgrenser skal være int16 + scale 0.1
-        RegisterDef(key='free_cooling_daytime_min_temp', address=4101, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='free_cooling_night_high_limit', address=4102, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='free_cooling_night_low_limit', address=4103, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='free_cooling_room_cancel_temp', address=4104, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C'),
-
+        RegisterDef(key='free_cooling_daytime_min_temp', address=4101, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='free_cooling_night_high_limit', address=4102, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='free_cooling_night_low_limit', address=4103, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='free_cooling_room_cancel_temp', address=4104, input_type='holding', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='free_cooling_start_time_h', address=4105, input_type='holding', data_type='uint16'),
         RegisterDef(key='free_cooling_start_time_m', address=4106, input_type='holding', data_type='uint16'),
         RegisterDef(key='free_cooling_end_time_h', address=4107, input_type='holding', data_type='uint16'),
@@ -220,21 +214,24 @@ class SaveModel:
 
         # --- Filter ---
         RegisterDef(key='filter_replacement_period', address=7000, input_type='holding', data_type='uint16', unit='months'),
-        RegisterDef(key='time_to_filter_replacement', address=7005, input_type='input', data_type='uint16', unit='s'),
+        # Remaining filter time: 32-bit (low=7004, high=7005) per PDF
+        RegisterDef(key='time_to_filter_replacement', address=7004, input_type='input', data_type='uint32', unit='s'),
+        # Alarm/flag (separate register - not part of the 32-bit time)
         RegisterDef(key='filter_replacement_alarm', address=7006, input_type='input', data_type='uint16'),
 
-        # --- Sensorer ---
+
+        # --- Sensors ---
         RegisterDef(key='digital_ui_1', address=12020, input_type='input', data_type='uint16'),
-        RegisterDef(key='outdoor_temperature', address=12101, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='supply_temperature', address=12102, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='efficiency_temperature', address=12106, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='overheat_temperature', address=12107, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C'),
-        RegisterDef(key='relative_moisture_extraction', address=12135, input_type='input', data_type='uint16', unit='%'),
+        RegisterDef(key='outdoor_temperature', address=12101, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='supply_temperature', address=12102, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='efficiency_temperature', address=12106, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='overheat_temperature', address=12107, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='relative_moisture_extraction', address=12135, input_type='input', data_type='uint16', unit='%', device_class='humidity'),
         RegisterDef(key='saf_speed_rpm', address=12400, input_type='input', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_rpm', address=12401, input_type='input', data_type='uint16', unit='rpm'),
-        RegisterDef(key='exhaust_temperature', address=12543, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C'),
+        RegisterDef(key='exhaust_temperature', address=12543, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
 
-        # --- Utganger og Alarmer ---
+        # --- Outputs and alarms ---
         RegisterDef(key='supply_air_fan_pwr_fact', address=14000, input_type='input', data_type='uint16', unit='%'),
         RegisterDef(key='extractor_fan_pwr_fact', address=14001, input_type='input', data_type='uint16', unit='%'),
         RegisterDef(key='heat_recovery', address=14102, input_type='input', data_type='uint16', unit='%'),
@@ -305,7 +302,6 @@ class SaveModel:
             }.get(man, "manual_unknown")
         else:
             out["mode_status_text"] = SaveModel.STATUS_MODE_TO_KEY.get(mode, "unknown")
-
 
         # Flow rates (estimated): derived from fan power factor (%) * flow_factor => m³/h
         try:
