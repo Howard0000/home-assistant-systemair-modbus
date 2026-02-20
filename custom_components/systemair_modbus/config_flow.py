@@ -103,20 +103,34 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return SystemairOptionsFlow()
+        # IMPORTANT: pass config_entry so OptionsFlow can read both data + options safely
+        return SystemairOptionsFlow(config_entry)
 
 
 class SystemairOptionsFlow(config_entries.OptionsFlow):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        self._config_entry = config_entry
+
     async def async_step_init(self, user_input=None) -> FlowResult:
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        current_scan = self._config_entry.options.get(
+            CONF_SCAN_INTERVAL,
+            self._config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        )
+        current_slave = self._config_entry.options.get(
+            CONF_SLAVE,
+            self._config_entry.data.get(CONF_SLAVE, DEFAULT_SLAVE),
+        )
+
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                ): vol.Coerce(int)
+                vol.Required(CONF_SCAN_INTERVAL, default=current_scan): vol.Coerce(int),
+                vol.Required(CONF_SLAVE, default=current_slave): vol.All(
+                    vol.Coerce(int),
+                    vol.In([1, 2]),
+                ),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
