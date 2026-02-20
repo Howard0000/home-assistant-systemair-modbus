@@ -4,36 +4,40 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import SystemairCoordinator
-from .modbus import ModbusTcpClient
-from .models import MODEL_REGISTRY
 from .const import (
+    DOMAIN,
+    PLATFORMS,
     CONF_HOST,
     CONF_PORT,
     CONF_SLAVE,
     CONF_SCAN_INTERVAL,
     CONF_MODEL,
     CONF_UNIT_MODEL,
+    DEFAULT_SLAVE,
     DEFAULT_SCAN_INTERVAL,
     UNIT_MODEL_QV_MAX,
 )
+from .coordinator import SystemairCoordinator
+from .modbus import ModbusTcpClient
+from .models import MODEL_REGISTRY
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    slave = entry.data[CONF_SLAVE]
     model_id = entry.data[CONF_MODEL]
     unit_model = entry.data.get(CONF_UNIT_MODEL)
-    qv_max = UNIT_MODEL_QV_MAX.get(unit_model) if unit_model else None
 
+    # Options override (tannhjul)
+    slave = entry.options.get(CONF_SLAVE, entry.data.get(CONF_SLAVE, DEFAULT_SLAVE))
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+
+    qv_max = UNIT_MODEL_QV_MAX.get(unit_model) if unit_model else None
 
     model_cls = MODEL_REGISTRY[model_id]
     model = model_cls(qv_max=qv_max)
 
-    client = ModbusTcpClient(host=host, port=port, slave=slave)
+    client = ModbusTcpClient(host=host, port=port, slave=int(slave))
     coordinator = SystemairCoordinator(
         hass,
         name=entry.title,
