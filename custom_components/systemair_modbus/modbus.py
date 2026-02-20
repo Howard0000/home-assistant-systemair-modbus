@@ -25,6 +25,9 @@ class ModbusTcpClient:
 
     def __post_init__(self) -> None:
         self._client: AsyncModbusTcpClient | None = None
+        # Auto-detect/cache: some gateways (e.g. Save Connect) expose "input registers"
+        # only via FC03 (holding), while others (e.g. EW11) support FC04 (input).
+        self._force_input_as_holding: bool = False
 
     async def _ensure_client(self) -> AsyncModbusTcpClient:
         if self._client is None:
@@ -165,9 +168,26 @@ class ModbusTcpClient:
                 count = end - start
 
                 rr = await self._call_read(client, fn_name, start, count)
+
                 if rr.isError():
-                    _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
-                    continue
+                    # Auto-detect + cache:
+                    # If FC04 fails but FC03 works for the same batch, treat gateway as
+                    # exposing "input registers" via holding registers.
+                    if fn_name == "read_input_registers" and not self._force_input_as_holding:
+                        rr2 = await self._call_read(client, "read_holding_registers", start, count)
+                        if not rr2.isError():
+                            self._force_input_as_holding = True
+                            _LOGGER.info(
+                                "Gateway does not return input registers via FC04; "
+                                "falling back to FC03 (holding) for all input registers."
+                            )
+                            rr = rr2  # decode from holding response
+                        else:
+                            _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
+                            continue
+                    else:
+                        _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
+                        continue
 
                 regs = list(rr.registers)
 
@@ -192,7 +212,13 @@ class ModbusTcpClient:
                     results[key] = value
 
         await read_group(holding, "read_holding_registers")
-        await read_group(inputs, "read_input_registers")
+
+        # Input registers: use FC04 unless we have detected a gateway that requires FC03.
+        if inputs:
+            if self._force_input_as_holding:
+                await read_group(inputs, "read_holding_registers")
+            else:
+                await read_group(inputs, "read_input_registers")
 
         return results
 
