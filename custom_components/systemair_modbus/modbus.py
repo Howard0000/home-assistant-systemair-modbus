@@ -167,15 +167,29 @@ class ModbusTcpClient:
                 end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
                 count = end - start
 
-                rr = await self._call_read(client, fn_name, start, count)
+                # --- robust read with FC04 -> FC03 fallback (handles isError() + exceptions) ---
+                rr = None
+                exc_fc04: Exception | None = None
 
-                if rr.isError():
+                try:
+                    rr = await self._call_read(client, fn_name, start, count)
+                except Exception as e:  # noqa: BLE001
+                    exc_fc04 = e
+
+                fc_failed = (exc_fc04 is not None) or (rr is not None and rr.isError())
+
+                if fc_failed:
                     # Auto-detect + cache:
-                    # If FC04 fails but FC03 works for the same batch, treat gateway as
-                    # exposing "input registers" via holding registers.
+                    # If FC04 fails (exception or error response) but FC03 works for same batch,
+                    # treat gateway as exposing "input registers" via holding registers.
                     if fn_name == "read_input_registers" and not self._force_input_as_holding:
-                        rr2 = await self._call_read(client, "read_holding_registers", start, count)
-                        if not rr2.isError():
+                        rr2 = None
+                        try:
+                            rr2 = await self._call_read(client, "read_holding_registers", start, count)
+                        except Exception:  # noqa: BLE001
+                            rr2 = None
+
+                        if rr2 is not None and not rr2.isError():
                             self._force_input_as_holding = True
                             _LOGGER.info(
                                 "Gateway does not return input registers via FC04; "
@@ -189,6 +203,7 @@ class ModbusTcpClient:
                         _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
                         continue
 
+                # At this point rr is expected to be a successful response
                 regs = list(rr.registers)
 
                 for d in b:
