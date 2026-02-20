@@ -2,9 +2,11 @@
 
 Defensive against pymodbus / HA wrapper signature differences.
 
-In some environments (e.g. ModbusClientMixin), `count` is keyword-only:
-  read_holding_registers(address, *, count=...)
-So we must prefer keyword calls: count=count.
+Key points:
+- Prefer keyword argument `count=` (some wrappers make it keyword-only)
+- Always try to include slave/unit id FIRST (Save Connect can be strict)
+- Auto-detect Save Connect quirk: FC04 (input) may be unsupported ("Illegal function")
+  -> fall back to FC03 (holding) for all "input" registers, cached per client instance.
 """
 from __future__ import annotations
 
@@ -25,7 +27,7 @@ class ModbusTcpClient:
 
     def __post_init__(self) -> None:
         self._client: AsyncModbusTcpClient | None = None
-        # Auto-detect/cache: some gateways (e.g. Save Connect) expose "input registers"
+        # Some gateways (e.g. Systemair Save Connect 1.0) expose many "IR" registers
         # only via FC03 (holding), while others (e.g. EW11) support FC04 (input).
         self._force_input_as_holding: bool = False
 
@@ -44,58 +46,62 @@ class ModbusTcpClient:
                 pass
         self._client = None
 
-    async def _call_read(self, client: AsyncModbusTcpClient, fn_name: str, address: int, count: int):
+    async def _call_read(
+        self,
+        client: AsyncModbusTcpClient,
+        fn_name: str,
+        address: int,
+        count: int,
+    ):
+        """Call a pymodbus read method in a signature-defensive way.
+
+        IMPORTANT: try to pass slave/unit FIRST (many Modbus servers are strict).
+        """
         fn = getattr(client, fn_name)
 
-        # 1) Preferred: keyword-only count supported
+        # 1) Preferred: keyword-only count supported + explicit slave/unit id
+        for kw in ("slave", "unit", "device_id"):
+            try:
+                return await fn(address, count=count, **{kw: self.slave})
+            except TypeError:
+                pass
+
+        # 2) Next: keyword-only count supported (no slave/unit)
         try:
             return await fn(address, count=count)
         except TypeError:
             pass
 
-        # 2) Try common slave keyword names (still with count=)
-        try:
-            return await fn(address, count=count, slave=self.slave)
-        except TypeError:
-            pass
-        try:
-            return await fn(address, count=count, unit=self.slave)
-        except TypeError:
-            pass
-        try:
-            return await fn(address, count=count, device_id=self.slave)
-        except TypeError:
-            pass
+        # 3) Try positional (address, count) with explicit slave/unit id via keywords (count positional)
+        for kw in ("slave", "unit", "device_id"):
+            try:
+                return await fn(address, count, **{kw: self.slave})
+            except TypeError:
+                pass
 
-        # 3) Some environments accept positional (address, count)
+        # 4) Some environments accept positional (address, count)
         try:
             return await fn(address, count)
         except TypeError:
             pass
 
-        # 4) Last resort: positional including slave (rare)
+        # 5) Last resort: positional including slave (rare)
         return await fn(address, count, self.slave)
 
     async def _call_write(self, client: AsyncModbusTcpClient, address: int, value: int):
+        """Call a pymodbus write_register method in a signature-defensive way."""
         fn = client.write_register
 
-        # 1) Preferred: simple (address, value)
+        # 1) Preferred: explicit slave/unit id
+        for kw in ("slave", "unit", "device_id"):
+            try:
+                return await fn(address, value, **{kw: self.slave})
+            except TypeError:
+                pass
+
+        # 2) Simple (address, value)
         try:
             return await fn(address, value)
-        except TypeError:
-            pass
-
-        # 2) Try common slave keyword names
-        try:
-            return await fn(address, value, slave=self.slave)
-        except TypeError:
-            pass
-        try:
-            return await fn(address, value, unit=self.slave)
-        except TypeError:
-            pass
-        try:
-            return await fn(address, value, device_id=self.slave)
         except TypeError:
             pass
 
@@ -138,6 +144,7 @@ class ModbusTcpClient:
             if not group:
                 return
 
+            # Build contiguous-ish batches
             batches: list[list[dict[str, Any]]] = []
             batch: list[dict[str, Any]] = []
             last_end: int | None = None
@@ -167,43 +174,47 @@ class ModbusTcpClient:
                 end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
                 count = end - start
 
-                # --- robust read with FC04 -> FC03 fallback (handles isError() + exceptions) ---
+                # Robust read: handle both isError() responses and exceptions
                 rr = None
-                exc_fc04: Exception | None = None
-
+                exc: Exception | None = None
                 try:
                     rr = await self._call_read(client, fn_name, start, count)
                 except Exception as e:  # noqa: BLE001
-                    exc_fc04 = e
+                    exc = e
 
-                fc_failed = (exc_fc04 is not None) or (rr is not None and rr.isError())
+                failed = (exc is not None) or (rr is not None and rr.isError())
 
-                if fc_failed:
-                    # Auto-detect + cache:
-                    # If FC04 fails (exception or error response) but FC03 works for same batch,
-                    # treat gateway as exposing "input registers" via holding registers.
+                if failed:
+                    # Auto-detect Save Connect: FC04 unsupported -> use FC03 for "input" regs
                     if fn_name == "read_input_registers" and not self._force_input_as_holding:
                         rr2 = None
+                        exc2: Exception | None = None
                         try:
                             rr2 = await self._call_read(client, "read_holding_registers", start, count)
-                        except Exception:  # noqa: BLE001
-                            rr2 = None
+                        except Exception as e:  # noqa: BLE001
+                            exc2 = e
 
                         if rr2 is not None and not rr2.isError():
                             self._force_input_as_holding = True
                             _LOGGER.info(
-                                "Gateway does not return input registers via FC04; "
+                                "Gateway does not support FC04 for input registers; "
                                 "falling back to FC03 (holding) for all input registers."
                             )
-                            rr = rr2  # decode from holding response
+                            rr = rr2
                         else:
                             _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
+                            if exc is not None:
+                                _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
+                            if exc2 is not None:
+                                _LOGGER.debug("Fallback exception (read_holding_registers): %s", exc2)
                             continue
                     else:
                         _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
+                        if exc is not None:
+                            _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
                         continue
 
-                # At this point rr is expected to be a successful response
+                # Decode values
                 regs = list(rr.registers)
 
                 for d in b:
@@ -226,9 +237,10 @@ class ModbusTcpClient:
 
                     results[key] = value
 
+        # First: holding regs
         await read_group(holding, "read_holding_registers")
 
-        # Input registers: use FC04 unless we have detected a gateway that requires FC03.
+        # Then: input regs (unless we already detected "input-as-holding")
         if inputs:
             if self._force_input_as_holding:
                 await read_group(inputs, "read_holding_registers")
