@@ -33,6 +33,10 @@ READ_RETRY_COUNT = 1              # "1 quick retry"
 READ_RETRY_DELAY_S = 0.15         # short, but enough for weak gateways
 WRITE_COOLDOWN_S = 1.2            # 1–2s after write before next poll read
 
+# --- "Old YAML modbus"-style pacing (helps weak gateways) ---
+CONNECT_DELAY_S = 2.0             # YAML had delay=10; 2s is a sane default without new UI option
+MESSAGE_WAIT_S = 0.03             # like message_wait_milliseconds: 30
+
 
 @dataclass
 class ModbusTcpClient:
@@ -47,15 +51,27 @@ class ModbusTcpClient:
         self._force_input_as_holding: bool = False
         self._logged_fc04_fallback: bool = False
 
+        # Track first connect so we can do connect-delay once
+        self._did_connect_delay: bool = False
+
         # v3.1: coordinate I/O to avoid read/write collisions
         self._io_lock = asyncio.Lock()
         self._last_write_monotonic: float = 0.0
 
     async def _ensure_client(self) -> AsyncModbusTcpClient:
         if self._client is None:
-            self._client = AsyncModbusTcpClient(self.host, port=self.port)
+            # timeout=5 matches what Philippe used in his old YAML config
+            try:
+                self._client = AsyncModbusTcpClient(self.host, port=self.port, timeout=5)
+            except TypeError:
+                self._client = AsyncModbusTcpClient(self.host, port=self.port)
+
         if not self._client.connected:
             await self._client.connect()
+            if CONNECT_DELAY_S > 0 and not self._did_connect_delay:
+                self._did_connect_delay = True
+                await asyncio.sleep(CONNECT_DELAY_S)
+
         return self._client
 
     async def async_close(self) -> None:
@@ -84,28 +100,33 @@ class ModbusTcpClient:
         """Call a pymodbus read method in a signature-defensive way."""
         fn = getattr(client, fn_name)
 
+        # Try including unit/slave first (Save Connect can be strict)
         for kw in ("slave", "unit", "device_id"):
             try:
                 return await fn(address, count=count, **{kw: self.slave})
             except TypeError:
                 pass
 
+        # No unit keyword
         try:
             return await fn(address, count=count)
         except TypeError:
             pass
 
+        # Positional count, with unit keyword
         for kw in ("slave", "unit", "device_id"):
             try:
                 return await fn(address, count, **{kw: self.slave})
             except TypeError:
                 pass
 
+        # Positional count, no unit keyword
         try:
             return await fn(address, count)
         except TypeError:
             pass
 
+        # Last resort: positional unit
         return await fn(address, count, self.slave)
 
     async def _call_write(self, client: AsyncModbusTcpClient, address: int, value: int):
@@ -161,8 +182,6 @@ class ModbusTcpClient:
 
     @staticmethod
     def _is_illegal_function(rr: Any) -> bool:
-        # Pymodbus typically uses exception code 0x01 for illegal function
-        # but we keep this permissive to handle wrapper differences.
         try:
             s = str(rr)
             return ("IllegalFunction" in s) or ("illegal function" in s.lower())
@@ -204,6 +223,26 @@ class ModbusTcpClient:
 
         return rr, exc
 
+    async def _probe_fc04_support(self, client: AsyncModbusTcpClient, test_address: int) -> None:
+        """Preflight: decide FC04 vs FC03 *before* we start reading batches.
+
+        This prevents 'read_input_registers @ ...' spam and missing entities at startup on Save Connect.
+        """
+        if self._force_input_as_holding:
+            return
+
+        rr, exc = await self._read_with_retry(client, "read_input_registers", test_address, 1)
+        failed = (exc is not None) or (rr is not None and rr.isError())
+
+        if failed or (rr is not None and self._is_illegal_function(rr)):
+            self._force_input_as_holding = True
+            if not self._logged_fc04_fallback:
+                self._logged_fc04_fallback = True
+                _LOGGER.info(
+                    "Gateway does not support FC04 for input registers; "
+                    "falling back to FC03 (holding) for all input registers."
+                )
+
     async def read_register_map(self, register_defs: list[dict[str, Any]]) -> dict[str, Any]:
         client = await self._ensure_client()
         results: dict[str, Any] = {}
@@ -212,9 +251,18 @@ class ModbusTcpClient:
         holding = [d for d in defs_sorted if (d.get("input_type") or "holding") == "holding"]
         inputs = [d for d in defs_sorted if (d.get("input_type") or "holding") == "input"]
 
+        # ✅ IMPORTANT: preflight once per client instance (per gateway) BEFORE batching inputs
+        if inputs and not self._force_input_as_holding:
+            first_input_addr = int(inputs[0]["address"])
+            await self._probe_fc04_support(client, first_input_addr)
+
         async def read_group(group: list[dict[str, Any]], requested_fn_name: str) -> None:
             if not group:
                 return
+
+            # If Save Connect: never use FC04 for "inputs"
+            if requested_fn_name == "read_input_registers" and self._force_input_as_holding:
+                requested_fn_name = "read_holding_registers"
 
             # Build contiguous-ish batches
             batches: list[list[dict[str, Any]]] = []
@@ -241,8 +289,8 @@ class ModbusTcpClient:
             if batch:
                 batches.append(batch)
 
-            # v3.1: cooldown + serialize I/O
             await self._maybe_wait_write_cooldown()
+
             async with self._io_lock:
                 first_call = True
 
@@ -254,26 +302,25 @@ class ModbusTcpClient:
                     chunks = self._chunk_span(start, count, MAX_BATCH_REGISTERS)
 
                     for chunk_start, chunk_count in chunks:
-                        if not first_call and INTER_BATCH_DELAY_S > 0:
-                            await asyncio.sleep(INTER_BATCH_DELAY_S)
+                        # pacing between requests
+                        if not first_call:
+                            if INTER_BATCH_DELAY_S > 0:
+                                await asyncio.sleep(INTER_BATCH_DELAY_S)
+                            if MESSAGE_WAIT_S > 0:
+                                await asyncio.sleep(MESSAGE_WAIT_S)
                         first_call = False
 
-                        # ✅ BUGFIX: if we already decided FC04 is unsupported,
-                        # switch to FC03 immediately for the rest of this round.
                         fn_name = requested_fn_name
-                        if fn_name == "read_input_registers" and self._force_input_as_holding:
-                            fn_name = "read_holding_registers"
 
                         rr, exc = await self._read_with_retry(client, fn_name, chunk_start, chunk_count)
                         failed = (exc is not None) or (rr is not None and rr.isError())
 
                         if failed:
-                            # Try FC04 -> FC03 fallback only if we were actually using FC04 here
+                            # Only try FC04 -> FC03 fallback if we were actually trying FC04
                             if fn_name == "read_input_registers" and not self._force_input_as_holding:
                                 rr2, exc2 = await self._read_with_retry(
                                     client, "read_holding_registers", chunk_start, chunk_count
                                 )
-
                                 if rr2 is not None and exc2 is None and not rr2.isError():
                                     self._force_input_as_holding = True
                                     if not self._logged_fc04_fallback:
@@ -331,7 +378,6 @@ class ModbusTcpClient:
 
         await read_group(holding, "read_holding_registers")
         if inputs:
-            # Note: requested_fn is FC04, but bugfix will switch to FC03 within same round once detected.
             await read_group(inputs, "read_input_registers")
 
         return results
