@@ -7,16 +7,31 @@ Key points:
 - Always try to include slave/unit id FIRST (Save Connect can be strict)
 - Auto-detect Save Connect quirk: FC04 (input) may be unsupported ("Illegal function")
   -> fall back to FC03 (holding) for all "input" registers, cached per client instance.
+
+v3.1 robustness (Modbus layer only):
+- 1 fast retry on read when rr.isError() or exceptions
+- Max batch size + automatic splitting of large spans
+- Small delay between batch calls ("be nice to gateway")
+- Write-lock + cooldown: avoid polling collisions around writes (mode changes etc.)
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+import asyncio
 import logging
+import time
 
 from pymodbus.client import AsyncModbusTcpClient
 
 _LOGGER = logging.getLogger(__name__)
+
+# --- Robustness knobs (v3.1) ---
+MAX_BATCH_REGISTERS = 70          # 60–80 is typically a good range
+INTER_BATCH_DELAY_S = 0.08        # 50–100 ms
+READ_RETRY_COUNT = 1              # "1 quick retry"
+READ_RETRY_DELAY_S = 0.15         # short, but enough for weak gateways
+WRITE_COOLDOWN_S = 1.2            # 1–2s after write before next poll read
 
 
 @dataclass
@@ -27,9 +42,15 @@ class ModbusTcpClient:
 
     def __post_init__(self) -> None:
         self._client: AsyncModbusTcpClient | None = None
+
         # Some gateways (e.g. Systemair Save Connect 1.0) expose many "IR" registers
         # only via FC03 (holding), while others (e.g. EW11) support FC04 (input).
         self._force_input_as_holding: bool = False
+        self._logged_fc04_fallback: bool = False
+
+        # v3.1: coordinate I/O to avoid read/write collisions (esp. mode writes)
+        self._io_lock = asyncio.Lock()
+        self._last_write_monotonic: float = 0.0
 
     async def _ensure_client(self) -> AsyncModbusTcpClient:
         if self._client is None:
@@ -45,6 +66,14 @@ class ModbusTcpClient:
             except Exception:  # noqa: BLE001
                 pass
         self._client = None
+
+    async def _maybe_wait_write_cooldown(self) -> None:
+        """After writes, give weak gateways a short quiet period before polling."""
+        if WRITE_COOLDOWN_S <= 0:
+            return
+        since = time.monotonic() - self._last_write_monotonic
+        if since < WRITE_COOLDOWN_S:
+            await asyncio.sleep(WRITE_COOLDOWN_S - since)
 
     async def _call_read(
         self,
@@ -131,6 +160,57 @@ class ModbusTcpClient:
     def _reg_len(data_type: str) -> int:
         return 2 if data_type == "uint32" else 1
 
+    @staticmethod
+    def _chunk_span(start: int, count: int, max_len: int) -> list[tuple[int, int]]:
+        """Split (start,count) into smaller (addr,qty) chunks."""
+        out: list[tuple[int, int]] = []
+        addr = start
+        remaining = count
+        while remaining > 0:
+            qty = min(remaining, max_len)
+            out.append((addr, qty))
+            addr += qty
+            remaining -= qty
+        return out
+
+    async def _read_with_retry(
+        self,
+        client: AsyncModbusTcpClient,
+        fn_name: str,
+        address: int,
+        count: int,
+    ):
+        """Read with a single fast retry on error/exception (v3.1)."""
+        rr = None
+        exc: Exception | None = None
+
+        try:
+            rr = await self._call_read(client, fn_name, address, count)
+        except Exception as e:  # noqa: BLE001
+            exc = e
+
+        if exc is None and rr is not None and not rr.isError():
+            return rr, None
+
+        # Retry
+        if READ_RETRY_COUNT > 0:
+            for _ in range(READ_RETRY_COUNT):
+                await asyncio.sleep(READ_RETRY_DELAY_S)
+                rr2 = None
+                exc2: Exception | None = None
+                try:
+                    rr2 = await self._call_read(client, fn_name, address, count)
+                except Exception as e:  # noqa: BLE001
+                    exc2 = e
+
+                if exc2 is None and rr2 is not None and not rr2.isError():
+                    return rr2, None
+
+                rr = rr2 or rr
+                exc = exc2 or exc
+
+        return rr, exc
+
     async def read_register_map(self, register_defs: list[dict[str, Any]]) -> dict[str, Any]:
         client = await self._ensure_client()
         results: dict[str, Any] = {}
@@ -144,7 +224,7 @@ class ModbusTcpClient:
             if not group:
                 return
 
-            # Build contiguous-ish batches
+            # Build contiguous-ish batches (same as before)
             batches: list[list[dict[str, Any]]] = []
             batch: list[dict[str, Any]] = []
             last_end: int | None = None
@@ -169,73 +249,101 @@ class ModbusTcpClient:
             if batch:
                 batches.append(batch)
 
-            for b in batches:
-                start = min(int(d["address"]) for d in b)
-                end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
-                count = end - start
+            # v3.1: Respect write cooldown + serialize I/O
+            await self._maybe_wait_write_cooldown()
 
-                # Robust read: handle both isError() responses and exceptions
-                rr = None
-                exc: Exception | None = None
-                try:
-                    rr = await self._call_read(client, fn_name, start, count)
-                except Exception as e:  # noqa: BLE001
-                    exc = e
+            async with self._io_lock:
+                first_call = True
 
-                failed = (exc is not None) or (rr is not None and rr.isError())
+                for b in batches:
+                    start = min(int(d["address"]) for d in b)
+                    end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
+                    count = end - start
 
-                if failed:
-                    # Auto-detect Save Connect: FC04 unsupported -> use FC03 for "input" regs
-                    if fn_name == "read_input_registers" and not self._force_input_as_holding:
-                        rr2 = None
-                        exc2: Exception | None = None
-                        try:
-                            rr2 = await self._call_read(client, "read_holding_registers", start, count)
-                        except Exception as e:  # noqa: BLE001
-                            exc2 = e
+                    # v3.1: split large spans into smaller chunks
+                    chunks = self._chunk_span(start, count, MAX_BATCH_REGISTERS)
 
-                        if rr2 is not None and not rr2.isError():
-                            self._force_input_as_holding = True
-                            _LOGGER.info(
-                                "Gateway does not support FC04 for input registers; "
-                                "falling back to FC03 (holding) for all input registers."
-                            )
-                            rr = rr2
-                        else:
-                            _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
-                            if exc is not None:
-                                _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
-                            if exc2 is not None:
-                                _LOGGER.debug("Fallback exception (read_holding_registers): %s", exc2)
-                            continue
-                    else:
-                        _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
-                        if exc is not None:
-                            _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
-                        continue
+                    for chunk_start, chunk_count in chunks:
+                        # v3.1: pacing between calls
+                        if not first_call and INTER_BATCH_DELAY_S > 0:
+                            await asyncio.sleep(INTER_BATCH_DELAY_S)
+                        first_call = False
 
-                # Decode values
-                regs = list(rr.registers)
+                        # Read chunk
+                        rr = None
+                        exc: Exception | None = None
 
-                for d in b:
-                    key = d["key"]
-                    addr = int(d["address"])
-                    idx = addr - start
+                        rr, exc = await self._read_with_retry(client, fn_name, chunk_start, chunk_count)
 
-                    data_type = d.get("data_type", "int16")
-                    raw = self._decode_registers(regs, idx, data_type)
-                    if raw is None:
-                        continue
+                        failed = (exc is not None) or (rr is not None and rr.isError())
 
-                    scale = float(d.get("scale", 1))
-                    offset = float(d.get("offset", 0))
-                    precision = d.get("precision")
+                        if failed:
+                            # Auto-detect Save Connect: FC04 unsupported -> use FC03 for "input" regs
+                            if fn_name == "read_input_registers" and not self._force_input_as_holding:
+                                rr2, exc2 = await self._read_with_retry(
+                                    client, "read_holding_registers", chunk_start, chunk_count
+                                )
 
-                    value = (raw * scale) + offset
-                    if isinstance(precision, int):
-                        value = round(value, precision)
+                                if rr2 is not None and exc2 is None and not rr2.isError():
+                                    self._force_input_as_holding = True
+                                    if not self._logged_fc04_fallback:
+                                        self._logged_fc04_fallback = True
+                                        _LOGGER.info(
+                                            "Gateway does not support FC04 for input registers; "
+                                            "falling back to FC03 (holding) for all input registers."
+                                        )
+                                    rr = rr2
+                                    exc = None
+                                else:
+                                    _LOGGER.debug(
+                                        "Modbus read error %s @%s len=%s (fallback failed)",
+                                        fn_name,
+                                        chunk_start,
+                                        chunk_count,
+                                    )
+                                    if exc is not None:
+                                        _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
+                                    if exc2 is not None:
+                                        _LOGGER.debug("Fallback exception (read_holding_registers): %s", exc2)
+                                    continue
+                            else:
+                                _LOGGER.debug(
+                                    "Modbus read error %s @%s len=%s",
+                                    fn_name,
+                                    chunk_start,
+                                    chunk_count,
+                                )
+                                if exc is not None:
+                                    _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
+                                continue
 
-                    results[key] = value
+                        regs = list(rr.registers)
+
+                        # Decode only the defs that fall within this chunk
+                        for d in b:
+                            addr = int(d["address"])
+                            length = self._reg_len(d.get("data_type", "int16"))
+
+                            if addr < chunk_start or (addr + length) > (chunk_start + chunk_count):
+                                continue
+
+                            key = d["key"]
+                            idx = addr - chunk_start
+
+                            data_type = d.get("data_type", "int16")
+                            raw = self._decode_registers(regs, idx, data_type)
+                            if raw is None:
+                                continue
+
+                            scale = float(d.get("scale", 1))
+                            offset = float(d.get("offset", 0))
+                            precision = d.get("precision")
+
+                            value = (raw * scale) + offset
+                            if isinstance(precision, int):
+                                value = round(value, precision)
+
+                            results[key] = value
 
         # First: holding regs
         await read_group(holding, "read_holding_registers")
@@ -251,7 +359,12 @@ class ModbusTcpClient:
 
     async def write_register(self, address: int, value: int) -> None:
         client = await self._ensure_client()
-        rr = await self._call_write(client, address, int(value))
+
+        async with self._io_lock:
+            rr = await self._call_write(client, address, int(value))
+            # Always stamp "last write" to trigger cooldown on next poll
+            self._last_write_monotonic = time.monotonic()
+
         if rr.isError():
             raise RuntimeError(f"Modbus write failed @ {address} = {value}")
 
