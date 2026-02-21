@@ -43,12 +43,11 @@ class ModbusTcpClient:
     def __post_init__(self) -> None:
         self._client: AsyncModbusTcpClient | None = None
 
-        # Some gateways (e.g. Systemair Save Connect 1.0) expose many "IR" registers
-        # only via FC03 (holding), while others (e.g. EW11) support FC04 (input).
+        # Save Connect quirk: input registers (FC04) unsupported -> use holding (FC03) instead
         self._force_input_as_holding: bool = False
         self._logged_fc04_fallback: bool = False
 
-        # v3.1: coordinate I/O to avoid read/write collisions (esp. mode writes)
+        # v3.1: coordinate I/O to avoid read/write collisions
         self._io_lock = asyncio.Lock()
         self._last_write_monotonic: float = 0.0
 
@@ -82,59 +81,48 @@ class ModbusTcpClient:
         address: int,
         count: int,
     ):
-        """Call a pymodbus read method in a signature-defensive way.
-
-        IMPORTANT: try to pass slave/unit FIRST (many Modbus servers are strict).
-        """
+        """Call a pymodbus read method in a signature-defensive way."""
         fn = getattr(client, fn_name)
 
-        # 1) Preferred: keyword-only count supported + explicit slave/unit id
         for kw in ("slave", "unit", "device_id"):
             try:
                 return await fn(address, count=count, **{kw: self.slave})
             except TypeError:
                 pass
 
-        # 2) Next: keyword-only count supported (no slave/unit)
         try:
             return await fn(address, count=count)
         except TypeError:
             pass
 
-        # 3) Try positional (address, count) with explicit slave/unit id via keywords (count positional)
         for kw in ("slave", "unit", "device_id"):
             try:
                 return await fn(address, count, **{kw: self.slave})
             except TypeError:
                 pass
 
-        # 4) Some environments accept positional (address, count)
         try:
             return await fn(address, count)
         except TypeError:
             pass
 
-        # 5) Last resort: positional including slave (rare)
         return await fn(address, count, self.slave)
 
     async def _call_write(self, client: AsyncModbusTcpClient, address: int, value: int):
         """Call a pymodbus write_register method in a signature-defensive way."""
         fn = client.write_register
 
-        # 1) Preferred: explicit slave/unit id
         for kw in ("slave", "unit", "device_id"):
             try:
                 return await fn(address, value, **{kw: self.slave})
             except TypeError:
                 pass
 
-        # 2) Simple (address, value)
         try:
             return await fn(address, value)
         except TypeError:
             pass
 
-        # 3) Last resort: positional including slave
         return await fn(address, value, self.slave)
 
     @staticmethod
@@ -148,7 +136,6 @@ class ModbusTcpClient:
             if data_type == "uint16":
                 return registers[idx] & 0xFFFF
             if data_type == "uint32":
-                # Systemair uses L/H register pairs: addr=low word, addr+1=high word
                 lo = registers[idx] & 0xFFFF
                 hi = registers[idx + 1] & 0xFFFF
                 return (hi << 16) | lo
@@ -162,7 +149,6 @@ class ModbusTcpClient:
 
     @staticmethod
     def _chunk_span(start: int, count: int, max_len: int) -> list[tuple[int, int]]:
-        """Split (start,count) into smaller (addr,qty) chunks."""
         out: list[tuple[int, int]] = []
         addr = start
         remaining = count
@@ -173,6 +159,16 @@ class ModbusTcpClient:
             remaining -= qty
         return out
 
+    @staticmethod
+    def _is_illegal_function(rr: Any) -> bool:
+        # Pymodbus typically uses exception code 0x01 for illegal function
+        # but we keep this permissive to handle wrapper differences.
+        try:
+            s = str(rr)
+            return ("IllegalFunction" in s) or ("illegal function" in s.lower())
+        except Exception:  # noqa: BLE001
+            return False
+
     async def _read_with_retry(
         self,
         client: AsyncModbusTcpClient,
@@ -180,7 +176,6 @@ class ModbusTcpClient:
         address: int,
         count: int,
     ):
-        """Read with a single fast retry on error/exception (v3.1)."""
         rr = None
         exc: Exception | None = None
 
@@ -192,22 +187,20 @@ class ModbusTcpClient:
         if exc is None and rr is not None and not rr.isError():
             return rr, None
 
-        # Retry
-        if READ_RETRY_COUNT > 0:
-            for _ in range(READ_RETRY_COUNT):
-                await asyncio.sleep(READ_RETRY_DELAY_S)
-                rr2 = None
-                exc2: Exception | None = None
-                try:
-                    rr2 = await self._call_read(client, fn_name, address, count)
-                except Exception as e:  # noqa: BLE001
-                    exc2 = e
+        for _ in range(READ_RETRY_COUNT):
+            await asyncio.sleep(READ_RETRY_DELAY_S)
+            rr2 = None
+            exc2: Exception | None = None
+            try:
+                rr2 = await self._call_read(client, fn_name, address, count)
+            except Exception as e:  # noqa: BLE001
+                exc2 = e
 
-                if exc2 is None and rr2 is not None and not rr2.isError():
-                    return rr2, None
+            if exc2 is None and rr2 is not None and not rr2.isError():
+                return rr2, None
 
-                rr = rr2 or rr
-                exc = exc2 or exc
+            rr = rr2 or rr
+            exc = exc2 or exc
 
         return rr, exc
 
@@ -216,15 +209,14 @@ class ModbusTcpClient:
         results: dict[str, Any] = {}
 
         defs_sorted = sorted(register_defs, key=lambda d: int(d["address"]))
-
         holding = [d for d in defs_sorted if (d.get("input_type") or "holding") == "holding"]
         inputs = [d for d in defs_sorted if (d.get("input_type") or "holding") == "input"]
 
-        async def read_group(group: list[dict[str, Any]], fn_name: str) -> None:
+        async def read_group(group: list[dict[str, Any]], requested_fn_name: str) -> None:
             if not group:
                 return
 
-            # Build contiguous-ish batches (same as before)
+            # Build contiguous-ish batches
             batches: list[list[dict[str, Any]]] = []
             batch: list[dict[str, Any]] = []
             last_end: int | None = None
@@ -249,9 +241,8 @@ class ModbusTcpClient:
             if batch:
                 batches.append(batch)
 
-            # v3.1: Respect write cooldown + serialize I/O
+            # v3.1: cooldown + serialize I/O
             await self._maybe_wait_write_cooldown()
-
             async with self._io_lock:
                 first_call = True
 
@@ -260,25 +251,24 @@ class ModbusTcpClient:
                     end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
                     count = end - start
 
-                    # v3.1: split large spans into smaller chunks
                     chunks = self._chunk_span(start, count, MAX_BATCH_REGISTERS)
 
                     for chunk_start, chunk_count in chunks:
-                        # v3.1: pacing between calls
                         if not first_call and INTER_BATCH_DELAY_S > 0:
                             await asyncio.sleep(INTER_BATCH_DELAY_S)
                         first_call = False
 
-                        # Read chunk
-                        rr = None
-                        exc: Exception | None = None
+                        # ✅ BUGFIX: if we already decided FC04 is unsupported,
+                        # switch to FC03 immediately for the rest of this round.
+                        fn_name = requested_fn_name
+                        if fn_name == "read_input_registers" and self._force_input_as_holding:
+                            fn_name = "read_holding_registers"
 
                         rr, exc = await self._read_with_retry(client, fn_name, chunk_start, chunk_count)
-
                         failed = (exc is not None) or (rr is not None and rr.isError())
 
                         if failed:
-                            # Auto-detect Save Connect: FC04 unsupported -> use FC03 for "input" regs
+                            # Try FC04 -> FC03 fallback only if we were actually using FC04 here
                             if fn_name == "read_input_registers" and not self._force_input_as_holding:
                                 rr2, exc2 = await self._read_with_retry(
                                     client, "read_holding_registers", chunk_start, chunk_count
@@ -294,6 +284,7 @@ class ModbusTcpClient:
                                         )
                                     rr = rr2
                                     exc = None
+                                    failed = False
                                 else:
                                     _LOGGER.debug(
                                         "Modbus read error %s @%s len=%s (fallback failed)",
@@ -301,10 +292,6 @@ class ModbusTcpClient:
                                         chunk_start,
                                         chunk_count,
                                     )
-                                    if exc is not None:
-                                        _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
-                                    if exc2 is not None:
-                                        _LOGGER.debug("Fallback exception (read_holding_registers): %s", exc2)
                                     continue
                             else:
                                 _LOGGER.debug(
@@ -313,13 +300,10 @@ class ModbusTcpClient:
                                     chunk_start,
                                     chunk_count,
                                 )
-                                if exc is not None:
-                                    _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
                                 continue
 
                         regs = list(rr.registers)
 
-                        # Decode only the defs that fall within this chunk
                         for d in b:
                             addr = int(d["address"])
                             length = self._reg_len(d.get("data_type", "int16"))
@@ -345,15 +329,10 @@ class ModbusTcpClient:
 
                             results[key] = value
 
-        # First: holding regs
         await read_group(holding, "read_holding_registers")
-
-        # Then: input regs (unless we already detected "input-as-holding")
         if inputs:
-            if self._force_input_as_holding:
-                await read_group(inputs, "read_holding_registers")
-            else:
-                await read_group(inputs, "read_input_registers")
+            # Note: requested_fn is FC04, but bugfix will switch to FC03 within same round once detected.
+            await read_group(inputs, "read_input_registers")
 
         return results
 
@@ -362,7 +341,6 @@ class ModbusTcpClient:
 
         async with self._io_lock:
             rr = await self._call_write(client, address, int(value))
-            # Always stamp "last write" to trigger cooldown on next poll
             self._last_write_monotonic = time.monotonic()
 
         if rr.isError():
