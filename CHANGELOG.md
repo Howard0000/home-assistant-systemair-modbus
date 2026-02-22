@@ -7,6 +7,28 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ---
 
+## [Unreleased]
+### Added
+- Added selectable **Gateway profile** option to tune Modbus read strategy:
+  - **SAVE Connect (safe mode)**: small batches (uint32-safe), no hole bridging, forces FC03 for logical input registers
+  - **Generic gateway** (EW11 etc.): normal/aggressive batching for faster polling
+- Gateway profile can be changed from the integration **Options** without reinstalling.
+
+### Changed
+- Modbus client now supports different read strategies depending on selected gateway profile (defensive vs. aggressive batching).
+
+### Fixed
+- Fixed decoding of 32-bit registers (uint32) using correct Systemair L/H word order:
+  - Reads 2 registers for uint32 values
+  - Decoder now uses `(high << 16) | low`
+  - Fixes incorrect values such as `countdown_mode_time` (registers 1110/1111), which are now decoded directly as seconds without any division workaround.
+
+### Notes
+- SAVE Connect gateways may require a higher scan interval (e.g. 30–60s) due to limited performance.
+- This section is a work in progress and will be included in the next release.
+
+---
+
 ## [1.1.1] – 2026-02-19
 ### 🐛 Bugfix release
 
@@ -18,7 +40,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Notes
 - This is a maintenance release with no functional changes to entities or services
 - Recommended update for all users (restores ability to change scan interval from UI)
-  
+
 ---
 
 ## [1.1.0] – 2026-02-18
