@@ -78,4 +78,3 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ### Notes
 - This is an unofficial community integration and is not affiliated with Systemair
-
