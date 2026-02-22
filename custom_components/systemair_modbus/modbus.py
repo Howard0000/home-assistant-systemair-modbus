@@ -31,6 +31,11 @@ DEFAULT_TIMEOUT_S = 5
 DEFAULT_CONNECT_DELAY_S = 10
 DEFAULT_MESSAGE_WAIT_S = 0.03  # 30 ms
 
+# Limit maximum number of registers per Modbus request (count).
+# NOTE: Must be >= 2 to support uint32 (2-register) values.
+# Set to None to disable (current behaviour).
+DEFAULT_MAX_BATCH_SIZE: int | None = 2
+
 
 @dataclass
 class ModbusTcpClient:
@@ -202,94 +207,121 @@ class ModbusTcpClient:
             if batch:
                 batches.append(batch)
 
+
+            def _split_ranges(start: int, count: int, max_count: int) -> list[tuple[int, int]]:
+                out: list[tuple[int, int]] = []
+                s = start
+                remaining = count
+                while remaining > 0:
+                    c = min(max_count, remaining)
+                    out.append((s, c))
+                    s += c
+                    remaining -= c
+                return out
+
             for b in batches:
                 start = min(int(d["address"]) for d in b)
                 end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
                 count = end - start
 
-                # IMPORTANT: decide function code per batch, based on current fallback flag.
-                if group_type == "input" and self._force_input_as_holding:
-                    fn_name = "read_holding_registers"
-                elif group_type == "input":
-                    fn_name = "read_input_registers"
+                max_batch = DEFAULT_MAX_BATCH_SIZE
+                if max_batch is None:
+                    ranges = [(start, count)]
                 else:
-                    fn_name = "read_holding_registers"
+                    # Ensure we can still read uint32 values (2 registers).
+                    max_count = max(2, int(max_batch))
+                    ranges = _split_ranges(start, count, max_count)
 
-                rr = None
-                exc: Exception | None = None
+                for r_start, r_count in ranges:
+                    # IMPORTANT: decide function code per batch, based on current fallback flag.
+                    if group_type == "input" and self._force_input_as_holding:
+                        fn_name = "read_holding_registers"
+                    elif group_type == "input":
+                        fn_name = "read_input_registers"
+                    else:
+                        fn_name = "read_holding_registers"
 
-                async with self._io_lock:
-                    try:
-                        rr = await self._call_read(client, fn_name, start, count)
-                    except Exception as e:  # noqa: BLE001
-                        exc = e
+                    rr = None
+                    exc: Exception | None = None
 
-                    # "message_wait_milliseconds" equivalent
-                    if DEFAULT_MESSAGE_WAIT_S > 0:
-                        await asyncio.sleep(DEFAULT_MESSAGE_WAIT_S)
+                    async with self._io_lock:
+                        try:
+                            rr = await self._call_read(client, fn_name, r_start, r_count)
+                        except Exception as e:  # noqa: BLE001
+                            exc = e
 
-                failed = (exc is not None) or (rr is not None and rr.isError())
+                        # "message_wait_milliseconds" equivalent
+                        if DEFAULT_MESSAGE_WAIT_S > 0:
+                            await asyncio.sleep(DEFAULT_MESSAGE_WAIT_S)
 
-                if failed:
-                    # Auto-detect Save Connect: FC04 unsupported -> use FC03 for "input" regs
-                    if fn_name == "read_input_registers" and not self._force_input_as_holding:
-                        rr2 = None
-                        exc2: Exception | None = None
+                    failed = (exc is not None) or (rr is not None and rr.isError())
 
-                        async with self._io_lock:
-                            try:
-                                rr2 = await self._call_read(client, "read_holding_registers", start, count)
-                            except Exception as e:  # noqa: BLE001
-                                exc2 = e
+                    if failed:
+                        # Auto-detect Save Connect: FC04 unsupported -> use FC03 for "input" regs
+                        if fn_name == "read_input_registers" and not self._force_input_as_holding:
+                            rr2 = None
+                            exc2: Exception | None = None
 
-                            if DEFAULT_MESSAGE_WAIT_S > 0:
-                                await asyncio.sleep(DEFAULT_MESSAGE_WAIT_S)
+                            async with self._io_lock:
+                                try:
+                                    rr2 = await self._call_read(client, "read_holding_registers", r_start, r_count)
+                                except Exception as e:  # noqa: BLE001
+                                    exc2 = e
 
-                        if rr2 is not None and not rr2.isError():
-                            self._force_input_as_holding = True
-                            _LOGGER.info(
-                                "Gateway does not support FC04 for input registers; "
-                                "falling back to FC03 (holding) for all input registers."
-                            )
-                            rr = rr2
+                                if DEFAULT_MESSAGE_WAIT_S > 0:
+                                    await asyncio.sleep(DEFAULT_MESSAGE_WAIT_S)
+
+                            if rr2 is not None and not rr2.isError():
+                                self._force_input_as_holding = True
+                                _LOGGER.info(
+                                    "Gateway does not support FC04 for input registers; "
+                                    "falling back to FC03 (holding) for all input registers."
+                                )
+                                rr = rr2
+                            else:
+                                _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, r_start, r_count)
+                                if exc is not None:
+                                    _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
+                                if exc2 is not None:
+                                    _LOGGER.debug("Fallback exception (read_holding_registers): %s", exc2)
+                                continue
                         else:
-                            _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
+                            _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, r_start, r_count)
                             if exc is not None:
                                 _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
-                            if exc2 is not None:
-                                _LOGGER.debug("Fallback exception (read_holding_registers): %s", exc2)
                             continue
-                    else:
-                        _LOGGER.debug("Modbus read error %s @%s len=%s", fn_name, start, count)
-                        if exc is not None:
-                            _LOGGER.debug("Read exception (%s): %s", fn_name, exc)
-                        continue
 
-                regs = list(rr.registers)
+                    regs = list(rr.registers)
 
-                for d in b:
-                    key = d.get("key")
-                    addr = int(d["address"])
-                    idx = addr - start
+                    for d in b:
+                        key = d.get("key")
+                        addr = int(d["address"])
+                        reg_len = self._reg_len(d.get("data_type", "int16"))
 
-                    dt = d.get("data_type", "int16")
-                    raw = self._decode_registers(regs, idx, dt)
-                    if raw is None:
-                        continue
+                        # Only decode values fully covered by this sub-range
+                        if addr < r_start or (addr + reg_len) > (r_start + r_count):
+                            continue
 
-                    scale = float(d.get("scale", 1.0) or 1.0)
-                    offset = float(d.get("offset", 0.0) or 0.0)
-                    val: Any = raw * scale + offset
+                        idx = addr - r_start
 
-                    precision = d.get("precision")
-                    if precision is not None:
-                        try:
-                            val = round(float(val), int(precision))
-                        except Exception:  # noqa: BLE001
-                            pass
+                        dt = d.get("data_type", "int16")
+                        raw = self._decode_registers(regs, idx, dt)
+                        if raw is None:
+                            continue
 
-                    if key:
-                        results[key] = val
+                        scale = float(d.get("scale", 1.0) or 1.0)
+                        offset = float(d.get("offset", 0.0) or 0.0)
+                        val: Any = raw * scale + offset
+
+                        precision = d.get("precision")
+                        if precision is not None:
+                            try:
+                                val = round(float(val), int(precision))
+                            except Exception:  # noqa: BLE001
+                                pass
+
+                        if key:
+                            results[key] = val
 
         # Read holding registers first
         await read_group(holding, "holding")
