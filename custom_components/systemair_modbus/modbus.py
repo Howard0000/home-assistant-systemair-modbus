@@ -8,10 +8,9 @@ Key points:
 - Auto-detect Save Connect quirk: FC04 (input) may be unsupported ("Illegal function")
   -> fall back to FC03 (holding) for all "input" registers, cached per client instance.
 
-Fixes vs previous file:
-- Once FC04->FC03 fallback is detected, we immediately use FC03 for the *rest of the same poll cycle*.
-  (Previously we still called FC04 for remaining input batches, causing "read_input_registers" spam
-  and sometimes leaving entities unpopulated at startup.)
+Profiles:
+- generic: aggressive batching, can bridge holes, tries FC04 for input registers
+- save_connect: safe mode (uint32-safe batch=2), no hole bridging, forces FC03 for "input"
 """
 
 from __future__ import annotations
@@ -31,10 +30,22 @@ DEFAULT_TIMEOUT_S = 5
 DEFAULT_CONNECT_DELAY_S = 10
 DEFAULT_MESSAGE_WAIT_S = 0.03  # 30 ms
 
-# Limit maximum number of registers per Modbus request (count).
-# NOTE: Must be >= 2 to support uint32 (2-register) values.
-# Set to None to disable (current behaviour).
-DEFAULT_MAX_BATCH_SIZE: int | None = 2
+# Profiles / gateway strategies
+GATEWAY_PROFILE_GENERIC = "generic"
+GATEWAY_PROFILE_SAVE_CONNECT = "save_connect"
+
+PROFILE_CONFIG: dict[str, dict[str, Any]] = {
+    GATEWAY_PROFILE_GENERIC: {
+        "max_batch_size": None,          # allow large reads
+        "bridge_holes": True,            # allow grouping across holes
+        "force_input_as_holding": False, # try FC04 normally
+    },
+    GATEWAY_PROFILE_SAVE_CONNECT: {
+        "max_batch_size": 2,             # uint32-safe, very conservative
+        "bridge_holes": False,           # only strictly contiguous
+        "force_input_as_holding": True,  # avoid FC04 entirely
+    },
+}
 
 
 @dataclass
@@ -42,14 +53,26 @@ class ModbusTcpClient:
     host: str
     port: int
     slave: int
+    gateway_profile: str = GATEWAY_PROFILE_GENERIC
 
     def __post_init__(self) -> None:
         self._client: AsyncModbusTcpClient | None = None
-        # Some gateways (e.g. Systemair Save Connect 1.0) expose many "IR" registers
-        # only via FC03 (holding), while others (e.g. EW11) support FC04 (input).
-        self._force_input_as_holding: bool = False
+
+        profile = PROFILE_CONFIG.get(self.gateway_profile, PROFILE_CONFIG[GATEWAY_PROFILE_GENERIC])
+        self._max_batch_size: int | None = profile["max_batch_size"]
+        self._bridge_holes: bool = bool(profile["bridge_holes"])
+        self._force_input_as_holding: bool = bool(profile["force_input_as_holding"])
+
         self._connected_once: bool = False
         self._io_lock = asyncio.Lock()
+
+        _LOGGER.info(
+            "Modbus client using gateway profile '%s' (max_batch_size=%s, bridge_holes=%s, force_input_as_holding=%s)",
+            self.gateway_profile,
+            self._max_batch_size,
+            self._bridge_holes,
+            self._force_input_as_holding,
+        )
 
     async def _ensure_client(self) -> AsyncModbusTcpClient:
         if self._client is None:
@@ -196,7 +219,14 @@ class ModbusTcpClient:
                     last_end = addr + length
                     continue
 
-                if last_end is not None and addr == last_end:
+                # Strict contiguous by default: addr == last_end
+                contiguous = last_end is not None and addr == last_end
+
+                # Generic profile may allow bridging "holes"
+                if self._bridge_holes and last_end is not None:
+                    contiguous = addr <= last_end
+
+                if contiguous:
                     batch.append(d)
                     last_end = max(last_end, addr + length)
                 else:
@@ -206,7 +236,6 @@ class ModbusTcpClient:
 
             if batch:
                 batches.append(batch)
-
 
             def _split_ranges(start: int, count: int, max_count: int) -> list[tuple[int, int]]:
                 out: list[tuple[int, int]] = []
@@ -224,7 +253,7 @@ class ModbusTcpClient:
                 end = max(int(d["address"]) + self._reg_len(d.get("data_type", "int16")) for d in b)
                 count = end - start
 
-                max_batch = DEFAULT_MAX_BATCH_SIZE
+                max_batch = self._max_batch_size
                 if max_batch is None:
                     ranges = [(start, count)]
                 else:
@@ -340,6 +369,7 @@ class ModbusTcpClient:
 
         if rr is None or rr.isError():
             raise RuntimeError(f"Modbus write failed @ {address} = {value}")
+
     async def write_0_1c(self, address: int, temp_c: float) -> None:
         """Write a temperature value in 0.1°C units (e.g. 21.5°C -> 215).
 
