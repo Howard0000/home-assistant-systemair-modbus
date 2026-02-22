@@ -18,6 +18,11 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_MODEL,
     CONF_UNIT_MODEL,
+    # NEW:
+    CONF_GATEWAY_PROFILE,
+    GATEWAY_PROFILE_GENERIC,
+    GATEWAY_PROFILE_SAVE_CONNECT,
+    DEFAULT_GATEWAY_PROFILE,
     DEFAULT_PORT,
     DEFAULT_SLAVE,
     DEFAULT_SCAN_INTERVAL,
@@ -61,6 +66,7 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             slave = int(user_input[CONF_SLAVE])
             scan_interval = int(user_input[CONF_SCAN_INTERVAL])
             unit_model = user_input[CONF_UNIT_MODEL]
+            gateway_profile = user_input[CONF_GATEWAY_PROFILE]
 
             # Unique ID to avoid duplicates
             await self.async_set_unique_id(f"{model_id}:{host.lower()}:{port}:{slave}")
@@ -83,14 +89,24 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SCAN_INTERVAL: scan_interval,
                         CONF_UNIT_MODEL: unit_model,
                     },
+                    # Store profile in options so it can be changed without re-adding the integration
+                    options={
+                        CONF_GATEWAY_PROFILE: gateway_profile,
+                    },
                 )
 
         model_options = {mid: MODEL_REGISTRY[mid].model_name for mid in SUPPORTED_MODELS}
+
+        gateway_profile_options = {
+            GATEWAY_PROFILE_GENERIC: "Generic Modbus gateway (EW11, etc.)",
+            GATEWAY_PROFILE_SAVE_CONNECT: "Systemair SAVE Connect (safe mode)",
+        }
 
         schema = vol.Schema(
             {
                 vol.Required(CONF_MODEL, default=SUPPORTED_MODELS[0]): vol.In(model_options),
                 vol.Required(CONF_UNIT_MODEL, default="Generic (legacy x3)"): vol.In(list(UNIT_MODEL_QV_MAX.keys())),
+                vol.Required(CONF_GATEWAY_PROFILE, default=DEFAULT_GATEWAY_PROFILE): vol.In(gateway_profile_options),
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
                 vol.Required(CONF_SLAVE, default=DEFAULT_SLAVE): vol.Coerce(int),
@@ -123,9 +139,19 @@ class SystemairOptionsFlow(config_entries.OptionsFlow):
             CONF_SLAVE,
             self._config_entry.data.get(CONF_SLAVE, DEFAULT_SLAVE),
         )
+        current_profile = self._config_entry.options.get(
+            CONF_GATEWAY_PROFILE,
+            self._config_entry.data.get(CONF_GATEWAY_PROFILE, DEFAULT_GATEWAY_PROFILE),
+        )
+
+        gateway_profile_options = {
+            GATEWAY_PROFILE_GENERIC: "Generic Modbus gateway (EW11, etc.)",
+            GATEWAY_PROFILE_SAVE_CONNECT: "Systemair SAVE Connect (safe mode)",
+        }
 
         schema = vol.Schema(
             {
+                vol.Required(CONF_GATEWAY_PROFILE, default=current_profile): vol.In(gateway_profile_options),
                 vol.Required(CONF_SCAN_INTERVAL, default=current_scan): vol.Coerce(int),
                 vol.Required(CONF_SLAVE, default=current_slave): vol.All(
                     vol.Coerce(int),
