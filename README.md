@@ -192,6 +192,33 @@ using entities provided by this integration.
   → where full stop is unavailable, the lowest possible fan speed is used
 - Available features depend on unit model and configuration
 
+## 🔧 Modbus gateways and performance profiles
+
+Different Modbus TCP gateways behave very differently in practice.
+
+Some gateways (such as **Systemair SAVE Connect**) are relatively underpowered and may:
+- struggle with large Modbus read requests
+- reject certain function codes (FC04 for input registers)
+- become unstable if polled too aggressively
+
+Other gateways (e.g. **Elfin EW11** and similar) can usually handle:
+- larger batch reads
+- more aggressive polling
+- normal Modbus function code usage
+
+To handle this, the integration provides a **Gateway profile** setting:
+
+- **Generic gateway** (default)  
+  Optimized for external gateways like EW11. Uses larger batches and faster polling.
+
+- **Systemair SAVE Connect (safe mode)**  
+  Uses very small batches, avoids problematic function codes, and prioritizes stability over speed.
+
+You can change the gateway profile from the integration **Options** without reinstalling.
+
+If you experience random read errors, slow updates, or connection drops with SAVE Connect,
+select **Systemair SAVE Connect (safe mode)** and consider using a higher scan interval (e.g. 30–60 seconds).
+
 ---
 
 ## 🔌 Physical installation – Elfin EW11 (Modbus RTU → TCP)
