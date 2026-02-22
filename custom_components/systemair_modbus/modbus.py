@@ -340,3 +340,13 @@ class ModbusTcpClient:
 
         if rr is None or rr.isError():
             raise RuntimeError(f"Modbus write failed @ {address} = {value}")
+    async def write_0_1c(self, address: int, temp_c: float) -> None:
+        """Write a temperature value in 0.1°C units (e.g. 21.5°C -> 215).
+
+        Some SAVE registers use 0.1°C scaling.
+        """
+        raw = int(round(float(temp_c) * 10.0))
+        # Defensive clamp (some devices don't accept negative setpoints)
+        if raw < 0:
+            raw = 0
+        await self.write_register(address, raw)
