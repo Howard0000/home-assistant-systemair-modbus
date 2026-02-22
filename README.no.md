@@ -187,6 +187,33 @@ ved hjelp av entiteter fra denne integrasjonen.
   → der full stopp ikke er tilgjengelig, brukes lavest mulig viftehastighet
 - Tilgjengelige funksjoner avhenger av aggregatmodell og konfigurasjon
 
+## 🔧 Modbus-gatewayer og ytelsesprofiler
+
+Ulike Modbus TCP-gatewayer oppfører seg svært forskjellig i praksis.
+
+Noen gatewayer (som **Systemair SAVE Connect**) er relativt svakt dimensjonert og kan:
+- slite med store Modbus-leseforespørsler
+- avvise enkelte funksjonskoder (FC04 for input-registre)
+- bli ustabile hvis de polles for aggressivt
+
+Andre gatewayer (f.eks. **Elfin EW11** og lignende) håndterer som regel:
+- større batch-lesinger
+- mer aggressiv polling
+- normal bruk av Modbus-funksjonskoder
+
+For å håndtere dette har integrasjonen en egen **Gateway-profil**-innstilling:
+
+- **Generic gateway** (standard)  
+  Optimalisert for eksterne gatewayer som EW11. Bruker større batch-lesinger og raskere polling.
+
+- **Systemair SAVE Connect (safe mode)**  
+  Bruker svært små batch-lesinger, unngår problematiske funksjonskoder og prioriterer stabilitet fremfor hastighet.
+
+Du kan endre gateway-profilen i integrasjonens **Alternativer** uten å måtte reinstallere.
+
+Hvis du opplever tilfeldige lese-feil, treg oppdatering eller brudd i forbindelsen med SAVE Connect,
+velg **Systemair SAVE Connect (safe mode)** og vurder å bruke et høyere scan-intervall (f.eks. 30–60 sekunder).
+
 ---
 
 ## 🔌 Fysisk installasjon – Elfin EW11 (Modbus RTU → TCP)
