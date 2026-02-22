@@ -196,7 +196,7 @@ class ModbusTcpClient:
                     last_end = addr + length
                     continue
 
-                if last_end is not None and addr <= last_end + 1:
+                if last_end is not None and addr == last_end:
                     batch.append(d)
                     last_end = max(last_end, addr + length)
                 else:
