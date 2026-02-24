@@ -151,12 +151,14 @@ ENABLED_RAW_KEYS: set[str] = {
     "supply_temperature",
     "exhaust_temperature",
     "room_temperature",
+    "supply_air_sp",
     # Fan speeds (RPM)
     "saf_speed_rpm",
     "eaf_speed_rpm",
     # Moisture (calculated)
     "calculated_moisture_extraction",
     "calculated_moisture_intake",
+    "relative_moisture_extraction",
     # Heat recovery
     "heat_recovery",
 }
