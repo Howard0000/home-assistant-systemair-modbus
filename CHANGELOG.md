@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[Unreleased]
+Added
+- Exposed "Relative moisture extraction" as a standard sensor (enabled by default) for easier tuning of RH control.
+- Exposed "Supply air temperature setpoint" as a standard sensor (enabled by default) to show what the unit is targeting.
+
+Changed
+- These two values are no longer hidden as diagnostic-only entities.
+
 ---
 
 ## [1.1.2] – 2026-02-22
