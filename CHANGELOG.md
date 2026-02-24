@@ -13,6 +13,12 @@ Added
 Changed
 - These two values are no longer hidden as diagnostic-only entities.
 
+- Replaced Modbus communication layer with a more robust implementation.
+- Added internal request queue, pacing and retry/backoff logic for improved stability on sensitive gateways (e.g. SAVE Connect).
+- Improved handling of Modbus read/write collisions between polling and user actions.
+- Added fallback logic for input registers (FC04 → FC03) where gateways do not support FC04 correctly.
+- No user-facing changes yet (behavior should remain identical for Generic gateway profile).
+
 ---
 
 ## [1.1.2] – 2026-02-22
