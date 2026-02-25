@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Awaitable
 import logging
 import asyncio
+import inspect
 
 from pymodbus.client import AsyncModbusTcpClient
 
@@ -51,6 +52,9 @@ PROFILE_CONFIG: dict[str, dict[str, Any]] = {
         "pacing_s": 0.0,
         "retries": 3,
         "backoff_base_s": 0.0,
+
+        # NEW: profile-controlled connect delay (avoid slowing down generic gateways)
+        "connect_delay_s": 0.0,
     },
     GATEWAY_PROFILE_SAVE_CONNECT: {
         "max_batch_size": 2,              # uint32-safe, very conservative
@@ -62,8 +66,24 @@ PROFILE_CONFIG: dict[str, dict[str, Any]] = {
         "pacing_s": DEFAULT_SAVE_CONNECT_PACING_S,
         "retries": DEFAULT_SAVE_CONNECT_RETRIES,
         "backoff_base_s": DEFAULT_SAVE_CONNECT_BACKOFF_BASE_S,
+
+        # NEW: keep conservative connect delay for save_connect safe mode
+        "connect_delay_s": float(DEFAULT_CONNECT_DELAY_S),
     },
 }
+
+
+async def _safe_client_close(client: AsyncModbusTcpClient | None) -> None:
+    """Close pymodbus client in a way that works across versions (sync or async close)."""
+    if client is None:
+        return
+    try:
+        res = client.close()
+        if inspect.isawaitable(res):
+            await res
+    except Exception:  # noqa: BLE001
+        # Best-effort close; some gateways/versions can throw during shutdown.
+        pass
 
 
 @dataclass
@@ -86,6 +106,9 @@ class ModbusTcpClient:
         self._retries: int = int(profile.get("retries", 3) or 3)
         self._backoff_base_s: float = float(profile.get("backoff_base_s", 0.0) or 0.0)
 
+        # NEW: profile-controlled connect delay
+        self._connect_delay_s: float = float(profile.get("connect_delay_s", 0.0) or 0.0)
+
         self._connected_once: bool = False
         self._io_lock = asyncio.Lock()
 
@@ -97,7 +120,7 @@ class ModbusTcpClient:
         _LOGGER.info(
             "Modbus client using gateway profile '%s' "
             "(max_batch_size=%s, bridge_holes=%s, force_input_as_holding=%s, "
-            "use_queue=%s, pacing_s=%s, retries=%s)",
+            "use_queue=%s, pacing_s=%s, retries=%s, backoff_base_s=%s)",
             self.gateway_profile,
             self._max_batch_size,
             self._bridge_holes,
@@ -105,6 +128,7 @@ class ModbusTcpClient:
             self._use_queue,
             self._pacing_s,
             self._retries,
+            self._backoff_base_s,
         )
 
     # ----------------------------
@@ -126,8 +150,9 @@ class ModbusTcpClient:
             # "delay" from old yaml: some gateways need a short pause after connect.
             if not self._connected_once:
                 self._connected_once = True
-                if DEFAULT_CONNECT_DELAY_S > 0:
-                    await asyncio.sleep(DEFAULT_CONNECT_DELAY_S)
+                # NEW: profile-controlled delay (generic=0, save_connect=10s)
+                if self._connect_delay_s > 0:
+                    await asyncio.sleep(self._connect_delay_s)
 
         return self._client
 
@@ -135,7 +160,7 @@ class ModbusTcpClient:
         """Close + reset client. Next call will reconnect."""
         try:
             if self._client is not None:
-                await self._client.close()
+                await _safe_client_close(self._client)
         except Exception:  # noqa: BLE001
             pass
         self._client = None
@@ -147,7 +172,7 @@ class ModbusTcpClient:
 
         if self._client is not None:
             try:
-                await self._client.close()
+                await _safe_client_close(self._client)
             except Exception:  # noqa: BLE001
                 pass
         self._client = None

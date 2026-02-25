@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 
 import async_timeout
 import voluptuous as vol
@@ -18,7 +19,6 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_MODEL,
     CONF_UNIT_MODEL,
-    # NEW:
     CONF_GATEWAY_PROFILE,
     GATEWAY_PROFILE_GENERIC,
     GATEWAY_PROFILE_SAVE_CONNECT,
@@ -35,15 +35,38 @@ from .models import MODEL_REGISTRY
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_validate_connection(*, host: str, port: int, slave: int, model_id: str) -> None:
+async def _tcp_probe(host: str, port: int, timeout_s: float = 3.0) -> None:
+    """Fast TCP reachability check (network/VLAN/firewall vs Modbus issues)."""
+    _LOGGER.debug("TCP probe start: %s:%s (timeout=%ss)", host, port, timeout_s)
+    conn = asyncio.open_connection(host, port)
+    reader, writer = await asyncio.wait_for(conn, timeout=timeout_s)
+    writer.close()
+    await writer.wait_closed()
+    _LOGGER.debug("TCP probe OK: %s:%s", host, port)
+
+
+async def _async_validate_connection(
+    *,
+    host: str,
+    port: int,
+    slave: int,
+    model_id: str,
+    gateway_profile: str,
+) -> None:
     """Validate that we can reach the device and read at least one register."""
     model_cls = MODEL_REGISTRY[model_id]
     # Use a single, stable holding register to keep config flow fast.
     test_reg = model_cls.REGISTERS[0].__dict__
 
-    client = ModbusTcpClient(host=host, port=port, slave=slave)
+    client = ModbusTcpClient(host=host, port=port, slave=slave, gateway_profile=gateway_profile)
+
+    # Keep default at 10s, but allow more room for SAVE Connect safe mode
+    timeout_s = 10
+    if gateway_profile == GATEWAY_PROFILE_SAVE_CONNECT:
+        timeout_s = 25
+
     try:
-        async with async_timeout.timeout(10):
+        async with async_timeout.timeout(timeout_s):
             result = await client.read_register_map([test_reg])
         # Some gateways can respond but still return empty/invalid data;
         # treat that as a failed connect for UX.
@@ -73,7 +96,17 @@ class SystemairModbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await _async_validate_connection(host=host, port=port, slave=slave, model_id=model_id)
+                # First: is TCP even reachable from HA?
+                await _tcp_probe(host, port, timeout_s=3.0)
+
+                # Then: can we do at least one Modbus read using the selected profile?
+                await _async_validate_connection(
+                    host=host,
+                    port=port,
+                    slave=slave,
+                    model_id=model_id,
+                    gateway_profile=gateway_profile,
+                )
             except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Cannot connect to Systemair Modbus device: %s", err, exc_info=True)
                 errors["base"] = "cannot_connect"
