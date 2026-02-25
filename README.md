@@ -221,6 +221,22 @@ select **Systemair SAVE Connect (safe mode)** and consider using a higher scan i
 
 ---
 
+### 🔍 Connection troubleshooting
+
+During setup, the integration performs a quick TCP connectivity check before attempting Modbus communication.
+
+If you get **"Failed to connect"**:
+- Make sure the IP address is correct and reachable from Home Assistant
+- Verify that port `502` (or your configured port) is open and reachable from Home Assistant
+- Check that the device you are connecting to is actually a Modbus TCP endpoint (not just a UI/network module)
+- If using SAVE Connect and you experience instability, try selecting **Systemair SAVE Connect (safe mode)** and increase the scan interval (e.g. 30–60s)
+
+If Modbus works from a PC but not from Home Assistant, the issue is often related to:
+- Network/VLAN/firewall differences between your PC and Home Assistant
+- Gateway connection limits or connection handling quirks
+
+---
+
 ## 🔌 Physical installation – Elfin EW11 (Modbus RTU → TCP)
 
 This section is only relevant if the unit does **not** have built-in Modbus TCP.
