@@ -216,6 +216,22 @@ velg **Systemair SAVE Connect (safe mode)** og vurder å bruke et høyere scan-i
 
 ---
 
+### 🔍 Feilsøking av tilkobling
+
+Under oppsettet gjør integrasjonen en rask TCP-tilkoblingstest før den prøver Modbus-kommunikasjon.
+
+Hvis du får **"Failed to connect"**:
+- Sjekk at IP-adressen er riktig og kan nås fra Home Assistant
+- Verifiser at port `502` (eller den porten du har konfigurert) er åpen og tilgjengelig fra Home Assistant
+- Kontroller at enheten du kobler til faktisk er et Modbus TCP-endepunkt (og ikke bare en UI-/nettverksmodul)
+- Hvis du bruker SAVE Connect og opplever ustabilitet, prøv å velge **Systemair SAVE Connect (safe mode)** og øk scan-intervallet (f.eks. 30–60 s)
+
+Hvis Modbus fungerer fra en PC, men ikke fra Home Assistant, skyldes det ofte:
+- Forskjeller i nettverk/VLAN/brannmur mellom PC-en din og Home Assistant
+- Begrensninger i gatewayen eller særheter i hvordan den håndterer tilkoblinger
+
+---
+
 ## 🔌 Fysisk installasjon – Elfin EW11 (Modbus RTU → TCP)
 
 Denne delen er kun relevant dersom aggregatet **ikke** har innebygd Modbus TCP.
