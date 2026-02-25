@@ -5,44 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[Unreleased]
-Added
+## [Unreleased]
 
-Exposed "Relative moisture extraction" as a standard sensor (enabled by default) for easier tuning of RH control.
+### Added
+- Exposed "Relative moisture extraction" as a standard sensor (enabled by default) for easier tuning of RH control.
+- Exposed "Supply air temperature setpoint" as a standard sensor (enabled by default) to show what the unit is targeting.
 
-Exposed "Supply air temperature setpoint" as a standard sensor (enabled by default) to show what the unit is targeting.
+### Changed
+- These two values are no longer hidden as diagnostic-only entities.
+- Replaced Modbus communication layer with a more robust implementation.
+- Added internal request queue, pacing and retry/backoff logic for improved stability on sensitive gateways (e.g. SAVE Connect).
+- Improved handling of Modbus read/write collisions between polling and user actions.
+- Added fallback logic for input registers (FC04 → FC03) where gateways do not support FC04 correctly.
+- Config Flow now performs a fast TCP preflight check before Modbus validation to better distinguish network issues from Modbus handshake problems.
+- Modbus connection validation now uses the selected Gateway profile (Generic vs SAVE Connect) to match runtime behavior.
+- Connection initialization delay is now profile-based:
+  - Generic gateway profile no longer applies the 10s post-connect delay.
+  - SAVE Connect profile keeps the conservative delay for safe-mode stability.
+- Improved robustness of Modbus client shutdown to ensure sockets are properly closed across different pymodbus variants.
 
-Changed
-
-These two values are no longer hidden as diagnostic-only entities.
-
-Replaced Modbus communication layer with a more robust implementation.
-
-Added internal request queue, pacing and retry/backoff logic for improved stability on sensitive gateways (e.g. SAVE Connect).
-
-Improved handling of Modbus read/write collisions between polling and user actions.
-
-Added fallback logic for input registers (FC04 → FC03) where gateways do not support FC04 correctly.
-
-Config Flow now performs a fast TCP preflight check before Modbus validation to better distinguish network issues from Modbus handshake problems.
-
-Modbus connection validation now uses the selected Gateway profile (Generic vs SAVE Connect) to match runtime behavior.
-
-Connection initialization delay is now profile-based:
-
-Generic gateway profile no longer applies the 10s post-connect delay.
-
-SAVE Connect profile keeps the conservative delay for safe-mode stability.
-
-Improved robustness of Modbus client shutdown to ensure sockets are properly closed across different pymodbus variants.
-
-Notes
-
-No functional changes to existing entities or services beyond the new sensors listed above.
-
-For the Generic gateway profile, runtime polling behavior should remain identical; changes mainly improve setup reliability and edge-case stability.
-
-SAVE Connect safe mode remains conservative and unchanged in behavior, aside from internal robustness improvements.
+### Notes
+- No functional changes to existing entities or services beyond the new sensors listed above.
+- For the Generic gateway profile, runtime polling behavior should remain identical; changes mainly improve setup reliability and edge-case stability.
+- SAVE Connect safe mode remains conservative and unchanged in behavior, aside from internal robustness improvements.
 
 ---
 
