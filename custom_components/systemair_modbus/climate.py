@@ -132,7 +132,7 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> float:
-        return float(self.coordinator.data.get("supply_air_sp") or 20.0)
+        return float(self.coordinator.data.get("supply_air_setpoint") or 20.0)
 
     @property
     def current_temperature(self) -> float:

@@ -2,10 +2,14 @@
   "title": "Systemair Modbus",
   "entity": {
     "sensor": {
+      "supply_air_setpoint": {
+        "name": "Supply air setpoint"
+      },
       "mode_status_text": {
         "name": "Mode",
         "state": {
           "auto": "Auto",
+          "auto_demand_control": "Auto – Demand controlled",
           "manual": "Manual",
           "party": "Party",
           "boost": "Boost",
@@ -70,8 +74,8 @@
       "supply_temperature": {
         "name": "Supply air temperature"
       },
-      "exhaust_temperature": {
-        "name": "Exhaust air temperature"
+      "extract_temperature": {
+        "name": "Extract air temperature"
       },
       "room_temperature": {
         "name": "Room temperature"
@@ -90,6 +94,9 @@
       },
       "heat_recovery": {
         "name": "Heat recovery"
+      },
+      "calculated_exhaust_temperature": {
+        "name": "Calculated exhaust air temperature"
       }
     },
     "switch": {
@@ -118,6 +125,9 @@
       }
     },
     "number": {
+      "supply_air_setpoint": {
+        "name": "Supply air setpoint (°C)"
+      },
       "holiday_duration_days": {
         "name": "Holiday duration (days)"
       },
@@ -132,9 +142,6 @@
       },
       "eco_heat_offset": {
         "name": "Eco heat offset"
-      },
-      "supply_air_setpoint": {
-        "name": "Supply air setpoint (°C)"
       },
       "free_cooling_outdoor_min": {
         "name": "Free cooling outdoor min (°C)"
@@ -183,6 +190,9 @@
       },
       "free_cooling_end_time_m": {
         "name": "Free cooling – end (min)"
+      },
+      "filter_replacement_period": {
+        "name": "Filter interval (months)"
       }
     },
     "binary_sensor": {
@@ -252,6 +262,9 @@
       },
       "fan_stop": {
         "name": "Stop"
+      },
+      "filter_replaced": {
+        "name": "Filter replaced"
       }
     }
   },
@@ -268,7 +281,6 @@
           "scan_interval": "Scan interval (seconds)",
           "unit_model": "Unit model (for estimated air flow)"
         }
-
       }
     },
     "error": {

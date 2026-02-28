@@ -5,6 +5,7 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import UnitOfTime
 
 from .const import DOMAIN
 from .entity import SystemairBaseEntity
@@ -19,11 +20,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities(
         [
             # Varigheter / offset
-            IntNumber(entry, coordinator, client, "holiday_mode_duration", model.ADDR_HOLIDAY_DURATION_DAYS, 0, 365, 1, unit="days"),
-            IntNumber(entry, coordinator, client, "away_mode_duration", model.ADDR_AWAY_DURATION_HOURS, 0, 720, 1, unit="h"),
-            IntNumber(entry, coordinator, client, "crowded_mode_duration", model.ADDR_CROWDED_DURATION_HOURS, 0, 72, 1, unit="h"),
-            IntNumber(entry, coordinator, client, "refresh_mode_duration", model.ADDR_REFRESH_DURATION_MINUTES, 0, 120, 1, unit="min"),
+            IntNumber(entry, coordinator, client, "holiday_mode_duration", model.ADDR_HOLIDAY_DURATION_DAYS, 0, 365, 1, unit=UnitOfTime.DAYS),
+            IntNumber(entry, coordinator, client, "away_mode_duration", model.ADDR_AWAY_DURATION_HOURS, 0, 720, 1, unit=UnitOfTime.HOURS),
+            IntNumber(entry, coordinator, client, "crowded_mode_duration", model.ADDR_CROWDED_DURATION_HOURS, 0, 72, 1, unit=UnitOfTime.HOURS),
+            IntNumber(entry, coordinator, client, "refresh_mode_duration", model.ADDR_REFRESH_DURATION_MINUTES, 0, 120, 1, unit=UnitOfTime.MINUTES),
             Temp01CNumber(entry, coordinator, client, "eco_heat_offset", model.ADDR_ECO_HEAT_OFFSET_0_1C, -10.0, 10.0, 0.5, unit="°C"),
+            Temp01CNumber(entry, coordinator, client, "supply_air_setpoint", model.ADDR_SUPPLY_AIR_SETPOINT_0_1C, 10.0, 30.0, 0.5, unit="°C"),
+            IntNumber(entry, coordinator, client, "filter_replacement_period", model.ADDR_FILTER_REPLACEMENT_PERIOD, 1, 36, 1, unit=None),
 
             # Free cooling
             Temp01CNumber(entry, coordinator, client, "free_cooling_daytime_min_temp", model.ADDR_FREE_COOLING_DAY_MIN_0_1C, 5.0, 30.0, 0.5, unit="°C"),
@@ -31,10 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             Temp01CNumber(entry, coordinator, client, "free_cooling_night_low_limit", model.ADDR_FREE_COOLING_NIGHT_LOW_0_1C, 5.0, 30.0, 0.5, unit="°C"),
             Temp01CNumber(entry, coordinator, client, "free_cooling_room_cancel_temp", model.ADDR_FREE_COOLING_ROOM_CANCEL_0_1C, 5.0, 30.0, 0.5, unit="°C"),
 
-            IntNumber(entry, coordinator, client, "free_cooling_start_time_h", model.ADDR_FREE_COOLING_START_H, 0, 23, 1, unit="h"),
-            IntNumber(entry, coordinator, client, "free_cooling_start_time_m", model.ADDR_FREE_COOLING_START_M, 0, 59, 1, unit="min"),
-            IntNumber(entry, coordinator, client, "free_cooling_end_time_h", model.ADDR_FREE_COOLING_END_H, 0, 23, 1, unit="h"),
-            IntNumber(entry, coordinator, client, "free_cooling_end_time_m", model.ADDR_FREE_COOLING_END_M, 0, 59, 1, unit="min"),
+            IntNumber(entry, coordinator, client, "free_cooling_start_time_h", model.ADDR_FREE_COOLING_START_H, 0, 23, 1, unit=UnitOfTime.HOURS),
+            IntNumber(entry, coordinator, client, "free_cooling_start_time_m", model.ADDR_FREE_COOLING_START_M, 0, 59, 1, unit=UnitOfTime.MINUTES),
+            IntNumber(entry, coordinator, client, "free_cooling_end_time_h", model.ADDR_FREE_COOLING_END_H, 0, 23, 1, unit=UnitOfTime.HOURS),
+            IntNumber(entry, coordinator, client, "free_cooling_end_time_m", model.ADDR_FREE_COOLING_END_M, 0, 59, 1, unit=UnitOfTime.MINUTES),
         ]
     )
 

@@ -66,7 +66,7 @@ class CookerHoodActive(SystemairBaseEntity, BinarySensorEntity):
     def __init__(self, entry: ConfigEntry, coordinator) -> None:
         super().__init__(entry, coordinator)
         self._attr_unique_id = f"{entry.entry_id}_cooker_hood_active_bin"
-        self._attr_name = "Kjøkkenvifte aktiv"
+        self._attr_translation_key = "cooker_hood_active"
         self._attr_icon = "mdi:fan"
 
     @property

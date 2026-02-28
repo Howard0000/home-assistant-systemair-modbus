@@ -64,6 +64,7 @@ class SaveModel:
     ADDR_FREE_COOLING_END_M = 4108
     ADDR_FREE_COOLING_MIN_SAF = 4111
     ADDR_FREE_COOLING_MIN_EAF = 4112
+    ADDR_FILTER_REPLACEMENT_PERIOD = 7000
 
     # NOTE: Keep all user-facing labels in English in code.
     # The HA frontend can translate *states* (for derived sensors) via translations,
@@ -181,7 +182,7 @@ class SaveModel:
         RegisterDef(key='eaf_speed_maximum', address=1419, input_type='holding', data_type='uint16', unit='rpm'),
 
         # --- Temperature settings ---
-        RegisterDef(key='supply_air_sp', address=2000, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='supply_air_setpoint', address=2000, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='exhaust_air_sp', address=2012, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='exhaust_air_min_sp', address=2020, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='exhaust_air_max_sp', address=2021, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
@@ -214,11 +215,10 @@ class SaveModel:
 
         # --- Filter ---
         RegisterDef(key='filter_replacement_period', address=7000, input_type='holding', data_type='uint16', unit='months'),
-        # Remaining filter time: 32-bit (low=7004, high=7005) per PDF
+        # Remaining filter time: 32-bit (low=7004, high=7005) per PDF (-1 offset applied)
         RegisterDef(key='time_to_filter_replacement', address=7004, input_type='input', data_type='uint32', unit='s'),
-        # Alarm/flag (separate register - not part of the 32-bit time)
-        RegisterDef(key='filter_replacement_alarm', address=7006, input_type='input', data_type='uint16'),
-
+        # Timestamp of last filter replacement: 32-bit (low=7001, high=7002) per PDF (-1 offset applied)
+        RegisterDef(key='filter_replacement_time', address=7001, input_type='input', data_type='uint32', unit='s'),
 
         # --- Sensors ---
         RegisterDef(key='digital_ui_1', address=12020, input_type='input', data_type='uint16'),
@@ -229,7 +229,7 @@ class SaveModel:
         RegisterDef(key='relative_moisture_extraction', address=12135, input_type='input', data_type='uint16', unit='%', device_class='humidity'),
         RegisterDef(key='saf_speed_rpm', address=12400, input_type='input', data_type='uint16', unit='rpm'),
         RegisterDef(key='eaf_speed_rpm', address=12401, input_type='input', data_type='uint16', unit='rpm'),
-        RegisterDef(key='exhaust_temperature', address=12543, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
+        RegisterDef(key='extract_temperature', address=12543, input_type='input', data_type='int16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
 
         # --- Outputs and alarms ---
         RegisterDef(key='supply_air_fan_pwr_fact', address=14000, input_type='input', data_type='uint16', unit='%'),
@@ -247,38 +247,90 @@ class SaveModel:
 
 
     def compute_derived(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Compute derived values from raw register data.
+
+        Notes:
+        - Keep user-facing text OUT of the model.
+        - For UI, prefer language-neutral keys + numeric values.
+        """
+
+        def _to_int(value: Any, default: int = 0) -> int:
+            try:
+                return int(float(value))
+            except (TypeError, ValueError):
+                return default
+
         out: dict[str, Any] = {}
 
-        seconds = int(data.get("time_to_filter_replacement") or 0)
-        alarm = int(data.get("filter_replacement_alarm") or 0)
-        if alarm == 1:
-            out["next_filter_change"] = "Bytt filter!"
-        elif seconds <= 0:
-            out["next_filter_change"] = "Ukjent"
-        else:
-            days = int(seconds / 86400)
-            months = int(days / 30)
-            if days > 548:
-                out["next_filter_change"] = "Mer enn 1,5 år"
-            elif days >= 31:
-                out["next_filter_change"] = f"{months} mnd"
-            else:
-                out["next_filter_change"] = f"{days} dager"
+        # ------------------------------------------------------------
+        # Filter status / remaining time
+        # ------------------------------------------------------------
+        seconds = _to_int(data.get("time_to_filter_replacement"), 0)
+        alarm = _to_int(data.get("filter_alarm"), 0)
+        warning = _to_int(data.get("filter_warning_alarm"), 0)
 
-        season = int(data.get("summer_winter_operation_1_0") or 0)
+        # ALWAYS define these to avoid UnboundLocalError
+        days = 0
+        months = 0
+        if seconds > 0:
+            days = seconds // 86400
+            months = days // 30
+
+        out["filter_time_remaining_s"] = seconds
+        out["filter_time_remaining_days"] = int(days)
+        out["filter_time_remaining_months"] = int(months)
+
+        if alarm == 1:
+            out["next_filter_change_status"] = "replace_filter"
+        elif warning == 1:
+            out["next_filter_change_status"] = "warning"
+        elif seconds <= 0:
+            out["next_filter_change_status"] = "unknown"
+        else:
+            out["next_filter_change_status"] = "ok"
+
+        if seconds <= 0:
+            out["next_filter_change_bucket"] = "unknown"
+        else:
+            if days > 548:
+                out["next_filter_change_bucket"] = "more_than_18_months"
+            elif days >= 31:
+                out["next_filter_change_bucket"] = "months"
+            else:
+                out["next_filter_change_bucket"] = "days"
+
+        # Backwards-compatible legacy text for existing sensor "next_filter_change".
+        # Keep in English to avoid hardcoded Norwegian in code.
+        if alarm == 1:
+            out["next_filter_change"] = "Replace filter!"
+        elif warning == 1:
+            out["next_filter_change"] = "Filter warning"
+        elif seconds <= 0:
+            out["next_filter_change"] = "Unknown"
+        else:
+            if days > 548:
+                out["next_filter_change"] = "More than 18 months"
+            elif days >= 31:
+                out["next_filter_change"] = f"{months} months"
+            else:
+                out["next_filter_change"] = f"{days} days"
+
+        # ------------------------------------------------------------
+        # Season
+        # ------------------------------------------------------------
+        season = _to_int(data.get("summer_winter_operation_1_0"), -1)
         out["active_season"] = "summer" if season == 0 else "winter" if season == 1 else "unknown"
 
-        raw_iaq = data.get("iaq_level")
-        try:
-            v = int(float(raw_iaq))
-        except (TypeError, ValueError):
-            v = None
-        if v is None:
-            out["iaq_level_text"] = "unknown"
-        else:
-            out["iaq_level_text"] = {0: "economy", 1: "good", 2: "improve"}.get(v, "unknown")
+        # ------------------------------------------------------------
+        # IAQ level text
+        # ------------------------------------------------------------
+        v = _to_int(data.get("iaq_level"), -1)
+        out["iaq_level_text"] = {0: "economy", 1: "good", 2: "improve"}.get(v, "unknown")
 
-        reg_mode = int(data.get("supply_air_room_exhaust_reg") or 0)
+        # ------------------------------------------------------------
+        # Regulation mode text
+        # ------------------------------------------------------------
+        reg_mode = _to_int(data.get("supply_air_room_exhaust_reg"), -1)
         if reg_mode == 0:
             out["regulation_mode_text"] = "supply_air"
         elif reg_mode == 1:
@@ -288,11 +340,14 @@ class SaveModel:
         else:
             out["regulation_mode_text"] = "unknown"
 
-        mode = int(data.get("mode_status_register") or 0)
-        man = int(data.get("manual_mode_command_register") or 0)
+        # ------------------------------------------------------------
+        # Mode status text (language-neutral keys)
+        # ------------------------------------------------------------
+        mode = _to_int(data.get("mode_status_register"), -1)
+        man = _to_int(data.get("manual_mode_command_register"), -1)
 
         if mode == 0:
-            out["mode_status_text"] = {2: "auto_low", 3: "auto_normal", 4: "auto_high"}.get(man, "auto_normal")
+            out["mode_status_text"] = "auto_demand_control"
         elif mode == 1:
             out["mode_status_text"] = {
                 0: "manual_stop",
@@ -303,15 +358,13 @@ class SaveModel:
         else:
             out["mode_status_text"] = SaveModel.STATUS_MODE_TO_KEY.get(mode, "unknown")
 
-        # Flow rates (estimated): derived from fan power factor (%) * flow_factor => m³/h
-        try:
-            p_e = int(float(data.get("extractor_fan_pwr_fact") or 0))
-        except (TypeError, ValueError):
-            p_e = 0
-        try:
-            p_s = int(float(data.get("supply_air_fan_pwr_fact") or 0))
-        except (TypeError, ValueError):
-            p_s = 0
+        # ------------------------------------------------------------
+        # Estimated flow rates (m³/h)
+        # ------------------------------------------------------------
+        p_e = _to_int(data.get("extractor_fan_pwr_fact"), 0)
+        p_s = _to_int(data.get("supply_air_fan_pwr_fact"), 0)
+
         out["exhaust_air_flow_rate"] = round(p_e * self.flow_factor)
         out["supply_air_flow_rate"] = round(p_s * self.flow_factor)
+
         return out
