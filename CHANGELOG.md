@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.2.0] – 2026-02-28
+
+### Added
+- Writable **Supply air setpoint** (TC_SP / HR 2001 → 0-based 2000).  
+  The setpoint can now be adjusted directly from Home Assistant via both the Climate entity and a Number entity.
+
+- Proper **Filter replaced** functionality.  
+  The integration now resets the filter timer by writing the current timestamp to HR 7002/7003 (Systemair addressing), instead of only clearing alarms.
+
+- Writable **Filter replacement period** (HR 7001 → 0-based 7000) exposed as a Number entity.
+
+- Calculated **Exhaust air temperature** sensor.  
+  Since no native Modbus register for true exhaust temperature is documented, this value is derived from extract temperature, outdoor temperature and heat recovery efficiency.
+
+### Changed
+- Auto mode is now represented as a single demand-controlled mode instead of exposing Auto Low / Auto Normal / Auto High variants in Home Assistant.
+
+- Improved filter timer handling and presentation logic.
+
+- Time-based Number entities now use Home Assistant standard time units where applicable.
+
+- Removed remaining hardcoded Norwegian UI strings from backend code. All user-facing labels are now handled via translation files.
+
+### Notes
+- The exhaust air temperature sensor is calculated and not read from a native Modbus register.
+- No breaking changes to existing entity IDs.
+- Fully backwards compatible with existing configurations.
 ## [1.1.3] – 2026-02-25
 
 ### Added
