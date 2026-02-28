@@ -31,7 +31,9 @@ If in doubt, consult a qualified technician.
 - Temperatures (outdoor, supply air, extract air, reheater, etc.)
 - Fan speeds and operating status
 - Heat recovery
-- Filter status and alarms
+- Filter status, remaining time and alarms
+- Proper filter reset (writes timestamp to the unit)
+- Configurable filter replacement period
 
 ### Energy efficiency
 - **Eco mode**
@@ -43,6 +45,8 @@ If in doubt, consult a qualified technician.
 - **Free cooling** when conditions are met
 - Party and Boost modes
 - Manual fan speed control (Low / Normal / High)
+- Writable supply air temperature setpoint
+- Calculated exhaust air temperature (derived from system values)
 
 ### User experience
 - Norwegian and English language support (follows Home Assistant language)
@@ -50,6 +54,19 @@ If in doubt, consult a qualified technician.
 - Built-in **buttons** for common actions
 - Robust handling of temporary Modbus connection loss
 
+---
+
+## 🚀 Recent improvements
+
+Recent versions include:
+
+- Writable supply air setpoint directly from Home Assistant
+- Proper filter reset using native timestamp registers
+- Configurable filter replacement period
+- Calculated exhaust air temperature sensor
+- Profile-based Modbus handling for improved stability on SAVE Connect and similar gateways
+
+The integration is under active development with a strong focus on correctness, stability and transparent entity behavior.
 ---
 
 ## 📋 Systemair SAVE – supported models
@@ -90,10 +107,10 @@ If you have a CD4-based unit and are willing to test, your feedback is extremely
 | VSR | VSR 700 | ✅ | ✅ | ❌ |
 | VTR | VTR 100/B | ✅ | ✅ | ❌ |
 | VTR | VTR 150/B | ✅ | ✅ | ❌ |
-| VTR | VTR 250/B | ✅ | ✅ | ❌ |
+| VTR | VTR 250/B | ✅ | ✅ | ✅ |
 | VTR | VTR 275/B | ✅ | ✅ | ❌ |
 | VTR | VTR 300 | ✅ | ✅ | ✅ |
-| VTR | VTR 350/B | ✅ | ✅ | ❌ |
+| VTR | VTR 350/B | ✅ | ✅ | ⚙️ |
 | VTR | VTR 500 | ✅ | ✅ | ✅ |
 | VTR | VTR 700 | ✅ | ✅ | ❌ |
 | VTC | VTC 200–1 | ✅ | ❌ | ❌ |
@@ -105,7 +122,9 @@ If you have a CD4-based unit and are willing to test, your feedback is extremely
 | VSC | VSC 300 | ✅ | ❌ | ❌ |
 
 > ✅ VTR 300: Confirmed working by a community user (**SAVE Touch**, original Systemair Modbus gateway, Modbus TCP).  
-> ✅ VTR 500: Confirmed working by a community user (tested with external Modbus TCP gateway).  
+> ✅ VTR 500: Confirmed working by a community user (tested with external Modbus TCP gateway).
+> ✅ VTR 250: Confirmed working by a community user (tested with external Modbus TCP gateway).  
+> ⚙️ VTR 350/B: Reported working, but not yet fully verified across all features.
 
 
 ---
