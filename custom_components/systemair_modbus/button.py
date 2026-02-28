@@ -36,6 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         SetManualSpeedButton(entry, coordinator, client, model, translation_key="fan_normal", speed_label="Normal"),
         SetManualSpeedButton(entry, coordinator, client, model, translation_key="fan_high", speed_label="High"),
         StopButton(entry, coordinator, client, model),
+
+        # Filter
+        FilterReplacedButton(entry, coordinator, client, model),
     ]
 
     async_add_entities(entities)
@@ -118,12 +121,48 @@ class StopButton(_BaseActionButton):
         await self._client.write_register(self._model.ADDR_MODE_COMMAND, manual_value)
 
         if allowed:
-            await self._client.write_register(self._model.ADDR_MANUAL_SPEED_COMMAND, self._model.MANUAL_SPEED_OPTIONS["Stop"])
+            await self._client.write_register(
+                self._model.ADDR_MANUAL_SPEED_COMMAND,
+                self._model.MANUAL_SPEED_OPTIONS["Stop"],
+            )
         else:
             # Soft-stop fallback: Low speed
             _LOGGER.warning(
                 "STOP not allowed (fan_manual_stop_allowed_register != 1). Falling back to Low speed."
             )
-            await self._client.write_register(self._model.ADDR_MANUAL_SPEED_COMMAND, self._model.MANUAL_SPEED_OPTIONS["Low"])
+            await self._client.write_register(
+                self._model.ADDR_MANUAL_SPEED_COMMAND,
+                self._model.MANUAL_SPEED_OPTIONS["Low"],
+            )
+
+        await self.coordinator.async_request_refresh()
+
+
+class FilterReplacedButton(_BaseActionButton):
+    """Reset filter timer (as if user pressed 'Filter replaced' on the unit).
+
+    This resets the internal counter used to calculate remaining filter time.
+    Addresses are 0-based (PDF - 1), same as the rest of the integration.
+
+    - filter replacement counter: 7001/7002 (low/high 16-bit) => uint32 seconds/counter
+    """
+    _attr_translation_key = "filter_replaced"
+    _attr_icon = "mdi:air-filter"
+
+    _ADDR_FILTER_REPLACEMENT_TIME_L = 7001
+    _ADDR_FILTER_REPLACEMENT_TIME_H = 7002
+
+    def __init__(self, entry: ConfigEntry, coordinator, client, model) -> None:
+        super().__init__(entry, coordinator, client, model)
+        self._attr_unique_id = f"{entry.entry_id}_btn_filter_replaced"
+
+    async def async_press(self) -> None:
+        try:
+            # Reset counter to 0 (low/high)
+            await self._client.write_register(self._ADDR_FILTER_REPLACEMENT_TIME_L, 0)
+            await self._client.write_register(self._ADDR_FILTER_REPLACEMENT_TIME_H, 0)
+        except Exception as err:
+            _LOGGER.warning("Filter replaced failed: %s", err)
+            raise HomeAssistantError(f"Filter replaced failed: {err}") from err
 
         await self.coordinator.async_request_refresh()

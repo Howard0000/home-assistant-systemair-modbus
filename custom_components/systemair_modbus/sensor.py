@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import re
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
@@ -38,7 +39,6 @@ def _pretty_reg_name(key: str) -> str:
     direct = {
         "outdoor_temperature": "Outdoor temperature",
         "supply_temperature": "Supply air temperature",
-        "exhaust_temperature": "Extract air temperature",
         "extract_temperature": "Extract air temperature",
         "room_temperature": "Room temperature",
         "free_cooling_enable": "Free cooling active",
@@ -149,9 +149,9 @@ ENABLED_RAW_KEYS: set[str] = {
     # Temperatures
     "outdoor_temperature",
     "supply_temperature",
-    "exhaust_temperature",
+    "extract_temperature",
     "room_temperature",
-    "supply_air_sp",
+    "supply_air_setpoint",
     # Fan speeds (RPM)
     "saf_speed_rpm",
     "eaf_speed_rpm",
@@ -188,6 +188,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     # Derived sensors
     for d in DERIVED:
         entities.append(SystemairDerivedSensor(coordinator, entry, d["key"], d.get("icon"), d.get("unit")))
+
+    # Calculated (estimated) exhaust/avkast temperature (NOT a real Modbus sensor)
+    entities.append(SystemairCalculatedExhaustTemperature(coordinator, entry))
 
     async_add_entities(entities)
 
@@ -239,3 +242,50 @@ class SystemairDerivedSensor(SystemairBaseEntity, SensorEntity):
     @property
     def native_value(self):
         return self.coordinator.data.get(self._key)
+
+
+class SystemairCalculatedExhaustTemperature(SystemairBaseEntity, SensorEntity):
+    """Calculated exhaust/avkast air temperature (estimated).
+
+    This is NOT a real Modbus value. It is estimated from:
+      - outdoor_temperature
+      - extract_temperature
+      - heat_recovery (%)
+    """
+
+    _attr_translation_key = "calculated_exhaust_temperature"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_entity_category = None
+    _attr_entity_registry_enabled_default = True
+
+    def __init__(self, coordinator, entry: ConfigEntry) -> None:
+        super().__init__(entry, coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_calculated_exhaust_temperature"
+        self._attr_suggested_object_id = _suggested_object_id("calculated_exhaust_temperature")
+
+    @property
+    def native_value(self):
+        t_out = self.coordinator.data.get("outdoor_temperature")
+        t_ext = self.coordinator.data.get("extract_temperature")
+        hr_pct = self.coordinator.data.get("heat_recovery")  # 0..100 (pådrag/aktivitet)
+
+        try:
+            if t_out is None or t_ext is None or hr_pct is None:
+                return None
+
+            t_out = float(t_out)
+            t_ext = float(t_ext)
+
+            # Skaler "pådrag" til estimert reell virkningsgrad (maks 82 %)
+            eta = 0.82 * (float(hr_pct) / 100.0)
+
+            # clamp 0..0.82
+            eta = max(0.0, min(0.82, eta))
+
+            # T_exhaust ≈ T_extract - eta * (T_extract - T_outdoor)
+            t_exhaust = t_ext - eta * (t_ext - t_out)
+            return round(t_exhaust, 1)
+
+        except (TypeError, ValueError):
+            return None

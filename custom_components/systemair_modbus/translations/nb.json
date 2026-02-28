@@ -2,10 +2,14 @@
   "title": "Systemair Modbus",
   "entity": {
     "sensor": {
+      "supply_air_setpoint": {
+        "name": "Tilluft setpunkt"
+      },
       "mode_status_text": {
         "name": "Modus",
         "state": {
           "auto": "Auto",
+          "auto_demand_control": "Auto – Behovsstyrt",
           "manual": "Manuell",
           "party": "Party",
           "boost": "Boost",
@@ -70,7 +74,7 @@
       "supply_temperature": {
         "name": "Tilluftstemperatur"
       },
-      "exhaust_temperature": {
+      "extract_temperature": {
         "name": "Avtrekkstemperatur"
       },
       "room_temperature": {
@@ -90,6 +94,9 @@
       },
       "heat_recovery": {
         "name": "Varmegjenvinning"
+      },
+      "calculated_exhaust_temperature": {
+        "name": "Beregnet avkasttemperatur"
       }
     },
     "switch": {
@@ -118,6 +125,9 @@
       }
     },
     "number": {
+      "supply_air_setpoint": {
+        "name": "Tilluft setpunkt (°C)"
+      },
       "holiday_duration_days": {
         "name": "Ferie varighet (dager)"
       },
@@ -132,9 +142,6 @@
       },
       "eco_heat_offset": {
         "name": "Øko varmeoffset"
-      },
-      "supply_air_setpoint": {
-        "name": "Tilluft setpunkt (°C)"
       },
       "free_cooling_outdoor_min": {
         "name": "Frikjøling ute min (°C)"
@@ -183,6 +190,9 @@
       },
       "free_cooling_end_time_m": {
         "name": "Frikjøling – slutt (min)"
+      },
+      "filter_replacement_period": {
+        "name": "Filterintervall (mnd)"
       }
     },
     "binary_sensor": {
@@ -252,6 +262,9 @@
       },
       "fan_stop": {
         "name": "Stopp"
+      },
+      "filter_replaced": {
+        "name": "Filter byttet"
       }
     }
   },
@@ -268,7 +281,6 @@
           "scan_interval": "Oppdateringsintervall (sekunder)",
           "unit_model": "Aggregatmodell (for estimert luftmengde)"
         }
-
       }
     },
     "error": {
