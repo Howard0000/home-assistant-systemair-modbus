@@ -101,7 +101,7 @@ If you have a CD4-based unit and are willing to test, your feedback is extremely
 |--------|--------------|----------------|----------------------------|--------|
 | VSR | VSR 150/B | ✅ | ✅ | ❌ |
 | VSR | VSR 200/B | ✅ | ✅ | ❌ |
-| VSR | VSR 300 | ✅ | ✅ | ❌ |
+| VSR | VSR 300 | ✅ | ✅ | ✅ |
 | VSR | VSR 400 | ✅ | ✅ | ❌ |
 | VSR | VSR 500 | ✅ | ✅ | ❌ |
 | VSR | VSR 700 | ✅ | ✅ | ❌ |
@@ -122,9 +122,10 @@ If you have a CD4-based unit and are willing to test, your feedback is extremely
 | VSC | VSC 300 | ✅ | ❌ | ❌ |
 
 > ✅ VTR 300: Confirmed working by a community user (**SAVE Touch**, original Systemair Modbus gateway, Modbus TCP).  
-> ✅ VTR 500: Confirmed working by a community user (tested with external Modbus TCP gateway).
-> ✅ VTR 250: Confirmed working by a community user (tested with external Modbus TCP gateway).  
-> ⚙️ VTR 350/B: Reported working, but not yet fully verified across all features.
+> ✅ VTR 500: Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
+> ✅ VTR 250: Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
+> ⚙️ VTR 350/B: Reported working, but not yet fully verified across all features.  
+> ✅ VSR 300: Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).
 
 
 ---
