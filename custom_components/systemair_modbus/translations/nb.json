@@ -135,10 +135,10 @@
         "name": "Borte varighet (timer)"
       },
       "refresh_duration_minutes": {
-        "name": "Boost (minutter)"
+        "name": "Oppfriskning (minutter)"
       },
       "crowded_duration_hours": {
-        "name": "Trengsel varighet (timer)"
+        "name": "Party – varighet (timer)"
       },
       "eco_heat_offset": {
         "name": "Øko varmeoffset"
@@ -165,7 +165,7 @@
         "name": "Party – varighet"
       },
       "refresh_mode_duration": {
-        "name": "Boost – varighet"
+        "name": "Oppfriskning – varighet"
       },
       "free_cooling_daytime_min_temp": {
         "name": "Frikjøling – dag min. temperatur"
