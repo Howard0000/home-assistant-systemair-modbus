@@ -100,7 +100,7 @@ Hvis du har et CD4-basert aggregat og er villig til å teste, er tilbakemeldinge
 |--------|--------------|----------------|----------------------------|--------|
 | VSR | VSR 150/B | ✅ | ✅ | ❌ |
 | VSR | VSR 200/B | ✅ | ✅ | ❌ |
-| VSR | VSR 300 | ✅ | ✅ | ❌ |
+| VSR | VSR 300 | ✅ | ✅ | ✅ |
 | VSR | VSR 400 | ✅ | ✅ | ❌ |
 | VSR | VSR 500 | ✅ | ✅ | ❌ |
 | VSR | VSR 700 | ✅ | ✅ | ❌ |
@@ -120,10 +120,11 @@ Hvis du har et CD4-basert aggregat og er villig til å teste, er tilbakemeldinge
 | VSC | VSC 200 | ✅ | ❌ | ❌ |
 | VSC | VSC 300 | ✅ | ❌ | ❌ |
 
-> ✅ VTR 300: Bekreftet fungerende av en community-bruker (**SAVE Touch**, original Systemair Modbus-gateway, Modbus TCP).  
-> ✅ VTR 500: Bekreftet fungerende av en community-bruker (testet med ekstern Modbus TCP-gateway).
-> ✅ VTR 250: Bekreftet fungerende av en community-bruker (testet med ekstern Modbus TCP-gateway).  
-> ⚙️ VTR 350/B: Rapportert fungerende, men ikke fullstendig verifisert på tvers av alle funksjoner.
+> ✅ VTR 300: Bekreftet fungerende av en bruker i community (SAVE Touch, original Systemair Modbus-gateway, Modbus TCP).  
+> ✅ VTR 500: Bekreftet fungerende av en bruker i community (testet med Elfin EW11 Modbus TCP-gateway).  
+> ✅ VTR 250: Bekreftet fungerende av en bruker i community (testet med Elfin EW11 Modbus TCP-gateway).  
+> ⚙️ VTR 350/B: Rapportert fungerende, men ikke fullstendig verifisert for alle funksjoner.  
+> ✅ VSR 300: Bekreftet fungerende av en bruker i community (testet med Elfin EW11 Modbus TCP-gateway).
 
 ---
 
