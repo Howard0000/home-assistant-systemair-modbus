@@ -302,6 +302,34 @@ Koble ledningene i henhold til diagrammet under:
 
 ![EW11 communication status](image/kommunikasjon%20EW11.png)
 
+⚠️ **Viktig informasjon om pakketellere**
+
+Systemair-aggregatet bruker **Modbus RTU**, som er en **forespørsel/svar-protokoll**.  
+Det betyr at aggregatet **ikke sender data av seg selv**.
+
+Kommunikasjon starter først når en **Modbus-klient aktivt spør etter data**
+(for eksempel Home Assistant-integrasjonen).
+
+Derfor kan **pakkecounteren på EW11-statussiden stå på 0**
+helt til Home Assistant forsøker å koble til.
+
+Hvis du ser **0 pakker**:
+
+1. Fullfør konfigurasjonen av EW11
+2. Legg til integrasjonen i Home Assistant
+3. Start integrasjonen
+4. Sjekk deretter EW11-statussiden på nytt
+
+Når Home Assistant begynner å lese Modbus-registere,
+vil **pakkecounteren begynne å øke**.
+
+Hvis den fortsatt står på 0, kontroller:
+
+- RS485-koblingene (`A` / `B`)
+- Baudrate
+- Parity og stop-bits
+- Modbus slave-ID
+
 Når kommunikasjonen er bekreftet kan IP-adressen brukes direkte i Home Assistant.
 
 ---
