@@ -303,6 +303,31 @@ Wire the connections according to the diagram below:
 8. Under **Status**, packet counters should increase:
 
 ![EW11 communication status](image/kommunikasjon%20EW11.png)
+⚠️ **Important note about packet counters**
+
+The Systemair unit uses **Modbus RTU**, which is a **request/response protocol**.  
+This means the unit **does not send any data by itself**.
+
+Communication only starts when a **Modbus client actively polls the unit**
+(for example the Home Assistant integration).
+
+Because of this, the **packet counters on the EW11 status page may remain at 0**
+until Home Assistant attempts to connect.
+
+If you see **0 packets**:
+
+1. Finish the EW11 configuration
+2. Add the integration in Home Assistant
+3. Start the integration
+4. Then check the EW11 status page again
+
+Once Home Assistant starts polling registers, the **packet counters should begin increasing**.
+
+If they still remain at 0, verify:
+- RS485 wiring (`A` / `B`)
+- Baud rate
+- Parity and stop bits
+- Modbus slave ID
 
 Once communication is confirmed, the IP address can be used directly in Home Assistant.
 
