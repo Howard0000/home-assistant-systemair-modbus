@@ -7,6 +7,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Changed
+- Clarified EW11 setup in README: packet counters may remain at 0 until a Modbus client begins polling the unit (suggested in #66)
+
 ### Fixed
 - Fixed Norwegian translation inconsistency for Boost mode (button vs duration entities)
 
