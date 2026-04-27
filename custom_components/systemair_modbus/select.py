@@ -17,14 +17,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     client = data["client"]
     model = coordinator.model
 
-    async_add_entities(
-        [
-            ModeSelect(entry, coordinator, client, model),
-            ManualSpeedSelect(entry, coordinator, client, model),
-            FreeCoolingMinSafSelect(entry, coordinator, client, model),
-            FreeCoolingMinEafSelect(entry, coordinator, client, model),
-        ]
-    )
+    entities = []
+
+    # ModeSelect (kun modeller som har full "SAVE mode" støtte)
+    if hasattr(model, "COMMAND_MODE_OPTIONS") and hasattr(model, "STATUS_MODE_TO_LABEL") and hasattr(model, "ADDR_MODE_COMMAND"):
+        entities.append(ModeSelect(entry, coordinator, client, model))
+
+    # Manual speed (SAVE + CD4)
+    if hasattr(model, "MANUAL_SPEED_OPTIONS") and hasattr(model, "ADDR_MANUAL_SPEED_COMMAND"):
+        entities.append(ManualSpeedSelect(entry, coordinator, client, model))
+
+    # Free cooling (kun hvis modellen støtter det)
+    if hasattr(model, "FREE_COOLING_MIN_SPEED_OPTIONS") and hasattr(model, "ADDR_FREE_COOLING_MIN_SAF"):
+        entities.append(FreeCoolingMinSafSelect(entry, coordinator, client, model))
+
+    if hasattr(model, "FREE_COOLING_MIN_SPEED_OPTIONS") and hasattr(model, "ADDR_FREE_COOLING_MIN_EAF"):
+        entities.append(FreeCoolingMinEafSelect(entry, coordinator, client, model))
+
+    if entities:
+        async_add_entities(entities)
 
 
 class ModeSelect(SystemairBaseEntity, SelectEntity):
@@ -76,8 +87,13 @@ class ManualSpeedSelect(SystemairBaseEntity, SelectEntity):
             v = int(float(raw))
         except (TypeError, ValueError):
             return None
-        inv = {val: key for key, val in self._model.MANUAL_SPEED_OPTIONS.items()}
-        return inv.get(v)
+
+        inv = getattr(self._model, "MANUAL_SPEED_OPTIONS_INV", None)
+        if isinstance(inv, dict):
+            return inv.get(v)
+
+        inv_fallback = {val: key for key, val in self._model.MANUAL_SPEED_OPTIONS.items()}
+        return inv_fallback.get(v)
 
     async def async_select_option(self, option: str) -> None:
         if option not in self._model.MANUAL_SPEED_OPTIONS:
@@ -106,6 +122,7 @@ class FreeCoolingMinSafSelect(SystemairBaseEntity, SelectEntity):
             v = int(float(raw))
         except (TypeError, ValueError):
             return None
+
         inv = {val: key for key, val in self._model.FREE_COOLING_MIN_SPEED_OPTIONS.items()}
         return inv.get(v)
 
@@ -135,6 +152,7 @@ class FreeCoolingMinEafSelect(SystemairBaseEntity, SelectEntity):
             v = int(float(raw))
         except (TypeError, ValueError):
             return None
+
         inv = {val: key for key, val in self._model.FREE_COOLING_MIN_SPEED_OPTIONS.items()}
         return inv.get(v)
 

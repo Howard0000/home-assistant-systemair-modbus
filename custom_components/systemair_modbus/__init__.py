@@ -24,6 +24,9 @@ from .coordinator import SystemairCoordinator
 from .modbus import ModbusTcpClient
 from .models import MODEL_REGISTRY
 
+# CD4: kun sensorer (tryggest)
+PLATFORMS_LEGACY_CD4 = ["sensor", "select"]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
@@ -33,7 +36,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Options override (tannhjul)
     slave = entry.options.get(CONF_SLAVE, entry.data.get(CONF_SLAVE, DEFAULT_SLAVE))
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+    scan_interval = entry.options.get(
+        CONF_SCAN_INTERVAL,
+        entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+    )
 
     gateway_profile = entry.options.get(
         CONF_GATEWAY_PROFILE,
@@ -61,18 +67,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
+    # Velg plattformer basert på modell (CD4 kun sensor)
+    platforms = PLATFORMS_LEGACY_CD4 if model_id == "legacy_cd4" else list(PLATFORMS)
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
         "coordinator": coordinator,
+        "platforms": platforms,
     }
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    platforms = data.get("platforms", PLATFORMS)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
 
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id, {})

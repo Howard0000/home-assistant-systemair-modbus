@@ -1,10 +1,11 @@
-# Home Assistant – Systemair Modbus (SAVE)
+# Home Assistant – Systemair Modbus (SAVE + CD4)
 
 **Norsk** · [Read in English](README.md)
 
 [![HACS](https://img.shields.io/badge/HACS-Default-green.svg)](https://hacs.xyz/)
 
-Dette er en **Home Assistant-integrasjon for Systemair SAVE ventilasjonsaggregater**
+Dette er en Home Assistant-integrasjon for Systemair ventilasjonsaggregater
+med støtte for både **SAVE** og **eldre CD4-systemer (eksperimentell støtte)**.
 med støtte for **Modbus TCP**.
 
 Integrasjonen gir strukturert overvåking og styring av ventilasjonsanlegget
@@ -80,21 +81,35 @@ Integrasjonen er under aktiv utvikling med sterkt fokus på korrekthet, stabilit
 
 ---
 
-### 🧪 CD4 (legacy) – beta testing
+### 🧪 CD4 (legacy) – eksperimentell støtte
 
-Eldre aggregater med **CD4-kontroller** bruker et annet Modbus-registerkart enn **SAVE Touch**-aggregater.  
-CD4-støtte er **under aktiv utvikling** og er **ikke inkludert i den nåværende stabile utgivelsen**.
+Støtte for eldre Systemair-aggregater med **CD4-kontroller** er nå inkludert i integrasjonen.
 
-En **beta / pre-release** er tilgjengelig for testing mot CD4-aggregater:
+⚠️ **Viktig:**
 
-👉 https://github.com/Howard0000/home-assistant-systemair-modbus/releases/tag/v0.1.0-cd4
+* CD4 bruker et annet Modbus-registerkart enn SAVE
+* Støtten er foreløpig **eksperimentell**
+* Enkelte sensorer og funksjoner kan mangle eller være ufullstendige
 
-**Viktig:**
-- Dette er en **tidlig testversjon** som kun er ment for verifisering
-- Den **leser foreløpig bare data** (ingen styring)
-- Vennligst rapporter funn via **GitHub Issues** (modell, år, kontroller, hva som fungerer / ikke fungerer)
+### Hva som fungerer per nå
 
-Hvis du har et CD4-basert aggregat og er villig til å teste, er tilbakemeldingen din svært verdifull for å ferdigstille ordentlig CD4-støtte.
+* Viftehastighet (Stopp / Lav / Normal / Høy)
+* SF / EF RPM (turtall)
+* Grunnleggende systemverdier (filter, system type osv.)
+* Manuell viftehastighetskontroll
+
+### Testing og tilbakemelding
+
+Hvis du har et CD4-basert aggregat, er tilbakemeldingen din svært verdifull.
+
+Rapporter gjerne:
+
+* Hva som fungerer
+* Hva som ikke fungerer
+* Feil verdier eller manglende sensorer
+
+via GitHub Issues.
+
 
 | Serie | Modell / Type | Modbus-støtte | Luftmengde-estimat (m³/h) | Testet |
 |--------|--------------|----------------|----------------------------|--------|
