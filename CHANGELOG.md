@@ -5,13 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.3.0-beta.1] – 2026-04-27
+
+### Added
+
+* Experimental support for Systemair CD4 / legacy units
 
 ### Changed
-- Clarified EW11 setup in README: packet counters may remain at 0 until a Modbus client begins polling the unit (suggested in #66)
+
+* Unified SAVE and CD4 into a single integration
+* Model-based platform loading (CD4 uses a limited feature set)
+* Clarified EW11 setup in README: packet counters may remain at 0 until a Modbus client begins polling the unit (suggested in #66)
 
 ### Fixed
-- Fixed Norwegian translation inconsistency for Boost mode (button vs duration entities)
+
+* Fixed Norwegian translation inconsistency for Boost mode (button vs duration entities)
+
+### Notes
+
+* CD4 support is experimental and under active development
+* SAVE functionality is unchanged from previous versions
+
+### Testing wanted
+
+* Verify that existing SAVE setups behave as in v1.2.0
+* Test CD4 on real hardware:
+
+  * Fan speed level (Stop / Low / Normal / High)
+  * SF / EF RPM values
+  * General stability and missing sensors
 
 
 ## [1.2.0] – 2026-02-28

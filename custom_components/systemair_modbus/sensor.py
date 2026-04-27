@@ -181,11 +181,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     entities: list[SensorEntity] = []
 
-    # Raw register-backed sensors (1:1 from the known working register map)
+    # Raw register-backed sensors (from model.REGISTERS)
     for reg in model.REGISTERS:
         entities.append(SystemairRegisterSensor(coordinator, entry, reg))
 
-    # Derived sensors
+    # CD4 (legacy): keep minimal like the old setup
+    if getattr(model, "model_id", None) == "legacy_cd4":
+        async_add_entities(entities)
+        return
+
+    # Derived sensors (SAVE-oriented)
     for d in DERIVED:
         entities.append(SystemairDerivedSensor(coordinator, entry, d["key"], d.get("icon"), d.get("unit")))
 
@@ -211,7 +216,9 @@ class SystemairRegisterSensor(SystemairBaseEntity, SensorEntity):
             self._attr_name = _pretty_reg_name(reg.key)
 
         # Hide most raw registers by default (they are still available in the entity registry).
-        if base_key not in ENABLED_RAW_KEYS:
+        enabled_keys = getattr(self.coordinator.model, "DEFAULT_ENABLED_RAW_KEYS", ENABLED_RAW_KEYS)
+
+        if base_key not in enabled_keys:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 

@@ -24,7 +24,9 @@ PLATFORMS: list[str] = ["sensor", "binary_sensor", "switch", "select", "number",
 
 # Modell-IDer må matche models/*.py
 MODEL_SAVE = "save"
-SUPPORTED_MODELS = [MODEL_SAVE]
+MODEL_LEGACY_CD4 = "legacy_cd4"
+
+SUPPORTED_MODELS = [MODEL_SAVE, MODEL_LEGACY_CD4]
 
 # Nominal max air flow (qv max) per unit model (m³/h). Used for *estimated* air flow rate derived sensors.
 # Source: Systemair datasheets / ErP tables (Ps ref 50 Pa).

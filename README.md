@@ -1,10 +1,11 @@
-# Home Assistant – Systemair Modbus (SAVE)
+# Home Assistant – Systemair Modbus (SAVE + CD4)
 
 **English** · [Les på norsk](README.no.md)
 
 [![HACS](https://img.shields.io/badge/HACS-Default-green.svg)](https://hacs.xyz/)
 
-This is a **Home Assistant integration for Systemair SAVE air handling units**
+This is a Home Assistant integration for Systemair ventilation units
+with support for both **SAVE** and **legacy CD4 (experimental)** systems.
 with support for **Modbus TCP**.
 
 The integration provides structured monitoring and control of the ventilation
@@ -80,21 +81,35 @@ The integration is under active development with a strong focus on correctness, 
 
 ---
 
-### 🧪 CD4 (legacy) – beta testing
+### 🧪 CD4 (legacy) – experimental support
 
-Older units with **CD4 controller** use a different Modbus register map than **SAVE Touch** units.  
-CD4 support is **under active development** and is **not included in the current stable release**.
+Support for older Systemair units using the **CD4 controller** is now included in the integration.
 
-A **beta / pre-release** is available for testing against CD4 units:
+⚠️ **Important:**
 
-👉 https://github.com/Howard0000/home-assistant-systemair-modbus/releases/tag/v0.1.0-cd4
+* CD4 uses a different Modbus register map than SAVE
+* Support is currently **experimental**
+* Some sensors and features may be missing or incomplete
 
-**Important:**
-- This is an **early test version** intended for verification only
-- It currently **reads data only** (no control)
-- Please report findings via **GitHub Issues** (model, year, controller, what works / doesn’t)
+### What currently works
 
-If you have a CD4-based unit and are willing to test, your feedback is extremely valuable for finalizing proper CD4 support.
+* Fan speed level (Stop / Low / Normal / High)
+* SF / EF RPM values
+* Basic system registers (filter, system type, etc.)
+* Manual fan speed control
+
+### Testing and feedback
+
+If you have a CD4-based unit, your feedback is extremely valuable.
+
+Please report:
+
+* What works
+* What does not work
+* Any incorrect values or missing sensors
+
+via GitHub Issues.
+
 
 
 | Series | Model / Type | Modbus support | Airflow estimation (m³/h) | Tested |

@@ -138,7 +138,7 @@
         "name": "Oppfriskning (minutter)"
       },
       "crowded_duration_hours": {
-        "name": "Party – varighet (timer)"
+        "name": "Trengsel varighet (timer)"
       },
       "eco_heat_offset": {
         "name": "Øko varmeoffset"
