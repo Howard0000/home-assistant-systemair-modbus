@@ -30,11 +30,7 @@ class SystemairManualSpeedFan(SystemairBaseEntity, FanEntity):
 
     _attr_icon = "mdi:fan"
     _attr_name = None
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.TURN_ON
-        | FanEntityFeature.TURN_OFF
-    )
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON
 
     def __init__(self, entry: ConfigEntry, coordinator, client, model) -> None:
         super().__init__(entry, coordinator)
@@ -54,6 +50,20 @@ class SystemairManualSpeedFan(SystemairBaseEntity, FanEntity):
             return inverse.get(value)
 
         return {val: key for key, val in self._model.MANUAL_SPEED_OPTIONS.items()}.get(value)
+
+    def _stop_allowed(self) -> bool:
+        raw = self.coordinator.data.get("fan_manual_stop_allowed_register")
+        try:
+            return int(float(raw or 0)) == 1
+        except (TypeError, ValueError):
+            return False
+
+    @property
+    def supported_features(self) -> FanEntityFeature:
+        features = self._attr_supported_features
+        if self._stop_allowed():
+            features |= FanEntityFeature.TURN_OFF
+        return features
 
     @property
     def is_on(self) -> bool | None:
@@ -89,7 +99,7 @@ class SystemairManualSpeedFan(SystemairBaseEntity, FanEntity):
         await self._write_speed("Normal")
 
     async def async_turn_off(self, **kwargs) -> None:
-        if "Stop" in self._model.MANUAL_SPEED_OPTIONS:
+        if self._stop_allowed() and "Stop" in self._model.MANUAL_SPEED_OPTIONS:
             await self._write_speed("Stop")
             return
 
