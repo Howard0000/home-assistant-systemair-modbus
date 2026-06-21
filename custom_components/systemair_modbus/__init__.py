@@ -24,8 +24,8 @@ from .coordinator import SystemairCoordinator
 from .modbus import ModbusTcpClient
 from .models import MODEL_REGISTRY
 
-# CD4: kun sensorer (tryggest)
-PLATFORMS_LEGACY_CD4 = ["sensor", "select"]
+# CD4: keep the legacy surface small, but expose manual speed as a fan control.
+PLATFORMS_LEGACY_CD4 = ["sensor", "select", "fan"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
