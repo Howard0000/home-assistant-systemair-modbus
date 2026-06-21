@@ -45,10 +45,25 @@ class Cd4Model:
         "eaf_speed_normal",
         "saf_speed_high",
         "eaf_speed_high",
+        "flow_units",
+        "saf_pwm",
+        "eaf_pwm",
+        "fan_speed_level_cd",
         "filter_replacement_period",
         "filter_days",
         "system_type",
         "fan_manual_stop_allowed_register",
+        "heater_type",
+        "frost_protection_level_setpoint",
+        "temperature_setpoint",
+        "temperature_regulation_setpoint",
+        "supply_temperature",
+        "extract_temperature",
+        "exhaust_air_preheater_temperature",
+        "overheating_frost_protection_temperature",
+        "outdoor_temperature",
+        "temperature_sensor_state",
+        "alarms_all_detailed",
     }
 
     def __init__(self, *, qv_max: int | None = None) -> None:
@@ -63,9 +78,87 @@ class Cd4Model:
         RegisterDef(key="eaf_speed_normal", address=r(104), input_type="holding", data_type="uint16", unit="rpm"),
         RegisterDef(key="saf_speed_high", address=r(105), input_type="holding", data_type="uint16", unit="rpm"),
         RegisterDef(key="eaf_speed_high", address=r(106), input_type="holding", data_type="uint16", unit="rpm"),
+        RegisterDef(key="flow_units", address=r(107), input_type="holding", data_type="uint16"),
+        RegisterDef(key="saf_pwm", address=r(108), input_type="holding", data_type="uint16", unit="%", state_class="measurement"),
+        RegisterDef(key="eaf_pwm", address=r(109), input_type="holding", data_type="uint16", unit="%", state_class="measurement"),
         RegisterDef(key="saf_speed_rpm", address=r(110), input_type="holding", data_type="uint16", unit="rpm", state_class="measurement"),
         RegisterDef(key="eaf_speed_rpm", address=r(111), input_type="holding", data_type="uint16", unit="rpm", state_class="measurement"),
+        RegisterDef(key="fan_speed_level_cd", address=r(112), input_type="holding", data_type="uint16"),
         RegisterDef(key="fan_manual_stop_allowed_register", address=r(113), input_type="holding", data_type="uint16"),
+
+        # --- Heating and temperature settings ---
+        RegisterDef(key="heater_type", address=r(200), input_type="holding", data_type="uint16"),
+        RegisterDef(key="frost_protection_level_setpoint", address=r(205), input_type="holding", data_type="uint16"),
+        RegisterDef(key="temperature_setpoint", address=r(207), input_type="holding", data_type="uint16"),
+        RegisterDef(
+            key="temperature_regulation_setpoint",
+            address=r(221),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+
+        # --- Temperatures ---
+        RegisterDef(
+            key="supply_temperature",
+            address=r(213),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+        RegisterDef(
+            key="extract_temperature",
+            address=r(214),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+        RegisterDef(
+            key="exhaust_air_preheater_temperature",
+            address=r(215),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+        RegisterDef(
+            key="overheating_frost_protection_temperature",
+            address=r(216),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+        RegisterDef(
+            key="outdoor_temperature",
+            address=r(217),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+        RegisterDef(key="temperature_sensor_state", address=r(218), input_type="holding", data_type="uint16"),
 
         # --- System info ---
         RegisterDef(key="system_type", address=r(500), input_type="holding", data_type="uint16"),
@@ -73,6 +166,9 @@ class Cd4Model:
         # --- Filter ---
         RegisterDef(key="filter_replacement_period", address=r(600), input_type="holding", data_type="uint16", unit="months"),
         RegisterDef(key="filter_days", address=r(601), input_type="holding", data_type="uint16", unit="days"),
+
+        # --- Alarms ---
+        RegisterDef(key="alarms_all_detailed", address=r(802), input_type="holding", data_type="uint16"),
     ]
 
     def compute_derived(self, data: dict[str, Any]) -> dict[str, Any]:
