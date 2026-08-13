@@ -137,62 +137,40 @@ Det er spesielt nyttig å få bekreftet:
 
 Rapporter gjerne erfaringer og eventuelle feil via GitHub Issues.
 
-  ------------------------------------------------------------------------
-  Serie   Modell / Type Modbus-støtte   Luftmengde-estimat (m³/h) Testet
-  ------- ------------- --------------- ------------------------- --------
-  VSR     VSR 150/B     ✅              ✅                        ❌
+------------------------------------------------------------------------
 
-  VSR     VSR 200/B     ✅              ✅                        ❌
+## ✅ Testede aggregater / kompatibilitet
 
-  VSR     VSR 300       ✅              ✅                        ✅
+| Serie | Modell / Type | Modbus-støtte | Luftmengde-estimat (m³/h) | Testet |
+|---|---|:---:|:---:|:---:|
+| VSR | VSR 150/B | ✅ | ✅ | ❌ |
+| VSR | VSR 200/B | ✅ | ✅ | ❌ |
+| VSR | VSR 300 | ✅ | ✅ | ✅ |
+| VSR | VSR 400 | ✅ | ✅ | ❌ |
+| VSR | VSR 500 | ✅ | ✅ | ✅ |
+| VSR | VSR 700 | ✅ | ✅ | ❌ |
+| VTR | VTR 100/B | ✅ | ✅ | ❌ |
+| VTR | VTR 150/B | ✅ | ✅ | ❌ |
+| VTR | VTR 250/B | ✅ | ✅ | ✅ |
+| VTR | VTR 275/B | ✅ | ✅ | ❌ |
+| VTR | VTR 300 | ✅ | ✅ | ✅ |
+| VTR | VTR 350/B | ✅ | ✅ | ⚙️ |
+| VTR | VTR 500 | ✅ | ✅ | ✅ |
+| VTR | VTR 700 | ✅ | ✅ | ❌ |
+| VTC | VTC 200-1 | ✅ | ❌ | ❌ |
+| VTC | VTC 300 | ✅ | ❌ | ❌ |
+| VTC | VTC 500 | ✅ | ❌ | ❌ |
+| VTC | VTC 700 | ✅ | ❌ | ❌ |
+| VSC | VSC 100 | ✅ | ❌ | ❌ |
+| VSC | VSC 200 | ✅ | ❌ | ❌ |
+| VSC | VSC 300 | ✅ | ❌ | ❌ |
 
-  VSR     VSR 400       ✅              ✅                        ❌
-
-  VSR     VSR 500       ✅              ✅                        ✅
-
-  VSR     VSR 700       ✅              ✅                        ❌
-
-  VTR     VTR 100/B     ✅              ✅                        ❌
-
-  VTR     VTR 150/B     ✅              ✅                        ❌
-
-  VTR     VTR 250/B     ✅              ✅                        ✅
-
-  VTR     VTR 275/B     ✅              ✅                        ❌
-
-  VTR     VTR 300       ✅              ✅                        ✅
-
-  VTR     VTR 350/B     ✅              ✅                        ⚙️
-
-  VTR     VTR 500       ✅              ✅                        ✅
-
-  VTR     VTR 700       ✅              ✅                        ❌
-
-  VTC     VTC 200--1    ✅              ❌                        ❌
-
-  VTC     VTC 300       ✅              ❌                        ❌
-
-  VTC     VTC 500       ✅              ❌                        ❌
-
-  VTC     VTC 700       ✅              ❌                        ❌
-
-  VSC     VSC 100       ✅              ❌                        ❌
-
-  VSC     VSC 200       ✅              ❌                        ❌
-
-  VSC     VSC 300       ✅              ❌                        ❌
-  ------------------------------------------------------------------------
-
-> ✅ VTR 300: Bekreftet fungerende av en bruker i community (SAVE Touch,
-> original Systemair Modbus-gateway, Modbus TCP).\
-> ✅ VTR 500: Bekreftet fungerende av en bruker i community (testet med
-> Elfin EW11 Modbus TCP-gateway).\
-> ✅ VTR 250: Bekreftet fungerende av en bruker i community (testet med
-> Elfin EW11 Modbus TCP-gateway).\
-> ⚙️ VTR 350/B: Rapportert fungerende, men ikke fullstendig verifisert
-> for alle funksjoner.\
-> ✅ VSR 300: Bekreftet fungerende av en bruker i community (testet med
-> Elfin EW11 Modbus TCP-gateway).
+> ✅ **VTR 300:** Bekreftet fungerende av bruker (SAVE Touch, original Systemair Modbus-gateway, Modbus TCP).  
+> ✅ **VTR 500:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
+> ✅ **VTR 250:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
+> ⚙️ **VTR 350/B:** Rapportert fungerende, men ikke fullt verifisert på alle funksjoner.  
+> ✅ **VSR 300:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
+> ✅ **VSR 500 (CD4 / legacy):** Bekreftet fungerende av bruker – viftestyring, temperaturstyring og sensorverdier testet.
 
 ------------------------------------------------------------------------
 
