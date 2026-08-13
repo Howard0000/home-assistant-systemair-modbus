@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,6 @@ def _pretty_reg_name(key: str) -> str:
     """Make register keys human-friendly (English fallback labels)."""
     base = _strip_prefixes(key).lower().strip("_")
 
-    # Direct mappings for the most-used/most-visible values
     direct = {
         "outdoor_temperature": "Outdoor temperature",
         "supply_temperature": "Supply air temperature",
@@ -113,14 +112,12 @@ def _pretty_reg_name(key: str) -> str:
 
     words = [trans.get(p, p) for p in parts]
 
-    # Fan-friendly formatting
     if fan:
         phrase = " ".join(words).strip()
         if rpm:
             phrase = (phrase + " (RPM)").strip()
         return f"{fan} – {phrase}" if phrase else fan
 
-    # Generic fallback
     phrase = " ".join(words).strip()
     if rpm:
         phrase = (phrase + " (RPM)").strip()
@@ -133,7 +130,6 @@ def _suggested_object_id(key: str) -> str:
     s = re.sub(r"[^a-z0-9_]+", "_", s).strip("_")
     if not s:
         s = "value"
-    # Always prefix with save_ for a consistent namespace in entity_id
     return f"save_{s}"
 
 
@@ -141,9 +137,6 @@ def _base_key(key: str) -> str:
     """Normalize a register key to its logical base (no device/model prefixes)."""
     return _strip_prefixes(key).lower().strip("_")
 
-
-# Raw register sensors: keep only the most useful enabled by default.
-# Everything else is still available, but hidden by default to reduce noise in the UI.
 
 ENABLED_RAW_KEYS: set[str] = {
     # Temperatures
@@ -163,6 +156,75 @@ ENABLED_RAW_KEYS: set[str] = {
     "heat_recovery",
 }
 
+
+# CD4 raw registers that have proper translated Home Assistant names in 1B.
+CD4_TRANSLATED_SENSOR_KEYS: set[str] = {
+    "saf_speed_low_rpm",
+    "eaf_speed_low_rpm",
+    "saf_speed_normal",
+    "eaf_speed_normal",
+    "saf_speed_high",
+    "eaf_speed_high",
+    "saf_speed_rpm",
+    "eaf_speed_rpm",
+    "saf_pwm",
+    "eaf_pwm",
+    "fan_speed_level_cd",
+    "temperature_sensor_1",
+    "temperature_sensor_2",
+    "temperature_sensor_3",
+    "temperature_sensor_4",
+    "temperature_sensor_5",
+    "temperature_sensor_state",
+    "rotor_state",
+    "defrost_state",
+    "system_type",
+    "filter_replacement_period",
+    "filter_days",
+    "manual_mode_command_register",
+}
+
+
+# These registers remain in Cd4Model.REGISTERS so the coordinator reads them,
+# but they are represented by binary_sensor entities instead of duplicate
+# numeric sensor entities.
+CD4_BINARY_SENSOR_SOURCE_KEYS: set[str] = {
+    "fan_manual_stop_allowed_register",
+    "rotor_relay_active",
+    "alarm_relay_active",
+}
+
+# CD4 temperature-control registers are read by the coordinator for the
+# temperature control entity, but are not useful as separate raw sensors.
+CD4_INTERNAL_SENSOR_KEYS: set[str] = {
+    "temperature_level_command_register",
+    "temperature_setpoint_level",
+    "temperature_level_1",
+    "temperature_level_2",
+    "temperature_level_3",
+    "temperature_level_4",
+    "temperature_level_5",
+    "pcu_pb_relays",
+}
+
+
+# Language-neutral enum state keys. Translation is handled by en/nb JSON.
+CD4_ENUM_VALUE_MAPS: dict[str, dict[int, str]] = {
+    "fan_speed_level_cd": {
+        0: "stop",
+        1: "low",
+        2: "normal",
+        3: "high",
+    },
+    "defrost_state": {
+        0: "inactive",
+        1: "reduced_flow",
+        2: "bypass",
+        3: "stop",
+    },
+}
+
+
 DERIVED = [
     {"key": "mode_status_text", "icon": "mdi:fan"},
     {"key": "active_season", "icon": "mdi:weather-sunny-snowflake"},
@@ -174,29 +236,50 @@ DERIVED = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities,
+) -> None:
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
     model = coordinator.model
+    is_cd4 = getattr(model, "model_id", None) == "legacy_cd4"
 
     entities: list[SensorEntity] = []
 
-    # Raw register-backed sensors (from model.REGISTERS)
+    # Raw register-backed sensors (from model.REGISTERS).
     for reg in model.REGISTERS:
+        # CD4: do not create duplicate numeric sensors for values represented
+        # as binary_sensor entities in phase 1B.
+        if is_cd4 and _base_key(reg.key) in CD4_BINARY_SENSOR_SOURCE_KEYS:
+            continue
+        if is_cd4 and _base_key(reg.key) in CD4_INTERNAL_SENSOR_KEYS:
+            continue
+
         entities.append(SystemairRegisterSensor(coordinator, entry, reg))
 
-    # CD4 (legacy): keep minimal like the old setup
-    if getattr(model, "model_id", None) == "legacy_cd4":
+    if is_cd4:
+        # CD4 phase 1B:
+        # Do not expose SAVE-style "mode_status_text" as a separate Mode sensor.
+        # REG_FAN_SPEED_LEVEL only represents Stop/Low/Normal/High, while
+        # fan_speed_level_cd already exposes the actual active fan level.
         async_add_entities(entities)
         return
 
     # Derived sensors (SAVE-oriented)
     for d in DERIVED:
-        entities.append(SystemairDerivedSensor(coordinator, entry, d["key"], d.get("icon"), d.get("unit")))
+        entities.append(
+            SystemairDerivedSensor(
+                coordinator,
+                entry,
+                d["key"],
+                d.get("icon"),
+                d.get("unit"),
+            )
+        )
 
-    # Calculated (estimated) exhaust/avkast temperature (NOT a real Modbus sensor)
     entities.append(SystemairCalculatedExhaustTemperature(coordinator, entry))
-
     async_add_entities(entities)
 
 
@@ -204,21 +287,30 @@ class SystemairRegisterSensor(SystemairBaseEntity, SensorEntity):
     def __init__(self, coordinator, entry: ConfigEntry, reg) -> None:
         super().__init__(entry, coordinator)
         self._key = reg.key
+        self._base_key = _base_key(reg.key)
+        self._is_cd4 = (
+            getattr(self.coordinator.model, "model_id", None) == "legacy_cd4"
+        )
 
-        # Deterministic unique_id (OK that history breaks right now)
         self._attr_unique_id = f"{entry.entry_id}_reg_{reg.key}"
         self._attr_suggested_object_id = _suggested_object_id(reg.key)
 
-        base_key = _base_key(reg.key)
-        if base_key in ENABLED_RAW_KEYS:
-            self._attr_translation_key = base_key
+        translated_keys = set(ENABLED_RAW_KEYS)
+        if self._is_cd4:
+            translated_keys |= CD4_TRANSLATED_SENSOR_KEYS
+
+        if self._base_key in translated_keys:
+            self._attr_translation_key = self._base_key
         else:
             self._attr_name = _pretty_reg_name(reg.key)
 
-        # Hide most raw registers by default (they are still available in the entity registry).
-        enabled_keys = getattr(self.coordinator.model, "DEFAULT_ENABLED_RAW_KEYS", ENABLED_RAW_KEYS)
+        enabled_keys = getattr(
+            self.coordinator.model,
+            "DEFAULT_ENABLED_RAW_KEYS",
+            ENABLED_RAW_KEYS,
+        )
 
-        if base_key not in enabled_keys:
+        if self._base_key not in enabled_keys:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 
@@ -229,13 +321,41 @@ class SystemairRegisterSensor(SystemairBaseEntity, SensorEntity):
         if reg.state_class:
             self._attr_state_class = reg.state_class
 
+        enum_map = CD4_ENUM_VALUE_MAPS.get(self._base_key) if self._is_cd4 else None
+        if enum_map is not None:
+            self._enum_map = enum_map
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = list(enum_map.values()) + ["unknown"]
+            # Enum sensors cannot have numeric measurement metadata.
+            self._attr_native_unit_of_measurement = None
+            self._attr_state_class = None
+        else:
+            self._enum_map = None
+
     @property
     def native_value(self):
-        return self.coordinator.data.get(self._key)
+        raw = self.coordinator.data.get(self._key)
+
+        if self._enum_map is None:
+            return raw
+
+        try:
+            value = int(float(raw))
+        except (TypeError, ValueError):
+            return "unknown"
+
+        return self._enum_map.get(value, "unknown")
 
 
 class SystemairDerivedSensor(SystemairBaseEntity, SensorEntity):
-    def __init__(self, coordinator, entry: ConfigEntry, key: str, icon: str | None, unit: str | None = None) -> None:
+    def __init__(
+        self,
+        coordinator,
+        entry: ConfigEntry,
+        key: str,
+        icon: str | None,
+        unit: str | None = None,
+    ) -> None:
         super().__init__(entry, coordinator)
         self._key = key
         self._attr_unique_id = f"{entry.entry_id}_derived_{key}"
@@ -269,30 +389,18 @@ class SystemairCalculatedExhaustTemperature(SystemairBaseEntity, SensorEntity):
     def __init__(self, coordinator, entry: ConfigEntry) -> None:
         super().__init__(entry, coordinator)
         self._attr_unique_id = f"{entry.entry_id}_calculated_exhaust_temperature"
-        self._attr_suggested_object_id = _suggested_object_id("calculated_exhaust_temperature")
+        self._attr_suggested_object_id = "save_calculated_exhaust_temperature"
 
     @property
     def native_value(self):
-        t_out = self.coordinator.data.get("outdoor_temperature")
-        t_ext = self.coordinator.data.get("extract_temperature")
-        hr_pct = self.coordinator.data.get("heat_recovery")  # 0..100 (pådrag/aktivitet)
+        data = self.coordinator.data
 
         try:
-            if t_out is None or t_ext is None or hr_pct is None:
-                return None
+            outdoor = float(data.get("outdoor_temperature"))
+            extract = float(data.get("extract_temperature"))
+            recovery = float(data.get("heat_recovery"))
 
-            t_out = float(t_out)
-            t_ext = float(t_ext)
-
-            # Skaler "pådrag" til estimert reell virkningsgrad (maks 82 %)
-            eta = 0.82 * (float(hr_pct) / 100.0)
-
-            # clamp 0..0.82
-            eta = max(0.0, min(0.82, eta))
-
-            # T_exhaust ≈ T_extract - eta * (T_extract - T_outdoor)
-            t_exhaust = t_ext - eta * (t_ext - t_out)
-            return round(t_exhaust, 1)
-
+            value = extract - ((extract - outdoor) * (recovery / 100.0))
+            return round(value, 1)
         except (TypeError, ValueError):
             return None
