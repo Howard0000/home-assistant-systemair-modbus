@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0-beta.2] – 2026-08-13
+
+### Added
+
+* Major expansion of Systemair CD4 / legacy support
+* Native Home Assistant Fan entity for CD4 ventilation control
+  * Off / Low / Medium / High
+  * Stop/Off is only available when supported by the unit
+* Native Home Assistant Climate entity for CD4
+  * Five-step supply air temperature control
+  * Current supply air temperature
+  * Heating state indication
+  * Fan mode control directly from the Climate entity
+* Improved CD4 temperature sensor mapping:
+  * Supply air temperature
+  * Extract air temperature
+  * Exhaust air temperature
+  * Outdoor temperature
+  * Overheat/frost protection temperature
+* Additional CD4 operating status:
+  * Alarm relay
+  * Defrost status
+  * Rotor status
+  * Heater status
+
+### Changed
+
+* Reworked CD4 entity organization for a cleaner Home Assistant device page
+* Moved technical/raw CD4 values to Diagnostics where appropriate
+* Improved Norwegian and English translations for CD4 entities
+* Manual fan speed handling now follows Home Assistant conventions
+* CD4 fan speed uses Low / Medium / High in the Home Assistant Fan and Climate interfaces
+* Improved handling of units where manual fan stop is not allowed
+* Climate heating state now reflects actual heater activity instead of only comparing current and target temperature
+
+### Fixed
+
+* Fixed CD4 translation state keys to comply with Home Assistant translation requirements
+* Improved CD4 status decoding and presentation
+* Removed obsolete and duplicate CD4 entity handling
+
+### Notes
+
+* CD4 support remains in beta while testing continues on real Systemair legacy units
+* SAVE functionality is unchanged in this beta
+* No additional SAVE register changes are included in this release
+
+### Testing wanted
+
+Feedback from users with real CD4-based units is especially welcome:
+
+* Fan control: Off / Low / Medium / High
+* Supply air temperature adjustment across all five available steps
+* Climate current and target temperatures
+* Heating state indication
+* Temperature sensor mapping
+* Alarm, rotor, defrost and heater states
+* General stability and Modbus communication
+
 ## [1.3.0-beta.1] – 2026-04-27
 
 ### Added
