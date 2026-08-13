@@ -140,62 +140,38 @@ Feedback is especially useful for:
 Please report your experience and any issues via GitHub Issues.
 
   ----------------------------------------------------------------------
-  Series   Model / Type Modbus support Airflow estimation       Tested
-                                       (m³/h)                   
-  -------- ------------ -------------- ------------------------ --------
-  VSR      VSR 150/B    ✅             ✅                       ❌
+ ## ✅ Tested units / Compatibility
 
-  VSR      VSR 200/B    ✅             ✅                       ❌
+| Series | Model / Type | Modbus support | Airflow estimation (m³/h) | Tested |
+|---|---|:---:|:---:|:---:|
+| VSR | VSR 150/B | ✅ | ✅ | ❌ |
+| VSR | VSR 200/B | ✅ | ✅ | ❌ |
+| VSR | VSR 300 | ✅ | ✅ | ✅ |
+| VSR | VSR 400 | ✅ | ✅ | ❌ |
+| VSR | VSR 500 | ✅ | ✅ | ✅ |
+| VSR | VSR 700 | ✅ | ✅ | ❌ |
+| VTR | VTR 100/B | ✅ | ✅ | ❌ |
+| VTR | VTR 150/B | ✅ | ✅ | ❌ |
+| VTR | VTR 250/B | ✅ | ✅ | ✅ |
+| VTR | VTR 275/B | ✅ | ✅ | ❌ |
+| VTR | VTR 300 | ✅ | ✅ | ✅ |
+| VTR | VTR 350/B | ✅ | ✅ | ⚙️ |
+| VTR | VTR 500 | ✅ | ✅ | ✅ |
+| VTR | VTR 700 | ✅ | ✅ | ❌ |
+| VTC | VTC 200-1 | ✅ | ❌ | ❌ |
+| VTC | VTC 300 | ✅ | ❌ | ❌ |
+| VTC | VTC 500 | ✅ | ❌ | ❌ |
+| VTC | VTC 700 | ✅ | ❌ | ❌ |
+| VSC | VSC 100 | ✅ | ❌ | ❌ |
+| VSC | VSC 200 | ✅ | ❌ | ❌ |
+| VSC | VSC 300 | ✅ | ❌ | ❌ |
 
-  VSR      VSR 300      ✅             ✅                       ✅
-
-  VSR      VSR 400      ✅             ✅                       ❌
-
-  VSR      VSR 500      ✅             ✅                       ✅
-
-  VSR      VSR 700      ✅             ✅                       ❌
-
-  VTR      VTR 100/B    ✅             ✅                       ❌
-
-  VTR      VTR 150/B    ✅             ✅                       ❌
-
-  VTR      VTR 250/B    ✅             ✅                       ✅
-
-  VTR      VTR 275/B    ✅             ✅                       ❌
-
-  VTR      VTR 300      ✅             ✅                       ✅
-
-  VTR      VTR 350/B    ✅             ✅                       ⚙️
-
-  VTR      VTR 500      ✅             ✅                       ✅
-
-  VTR      VTR 700      ✅             ✅                       ❌
-
-  VTC      VTC 200--1   ✅             ❌                       ❌
-
-  VTC      VTC 300      ✅             ❌                       ❌
-
-  VTC      VTC 500      ✅             ❌                       ❌
-
-  VTC      VTC 700      ✅             ❌                       ❌
-
-  VSC      VSC 100      ✅             ❌                       ❌
-
-  VSC      VSC 200      ✅             ❌                       ❌
-
-  VSC      VSC 300      ✅             ❌                       ❌
-  ----------------------------------------------------------------------
-
-> ✅ VTR 300: Confirmed working by a community user (**SAVE Touch**,
-> original Systemair Modbus gateway, Modbus TCP).\
-> ✅ VTR 500: Confirmed working by a community user (tested with Elfin
-> EW11 Modbus TCP gateway).\
-> ✅ VTR 250: Confirmed working by a community user (tested with Elfin
-> EW11 Modbus TCP gateway).\
-> ⚙️ VTR 350/B: Reported working, but not yet fully verified across all
-> features.\
-> ✅ VSR 300: Confirmed working by a community user (tested with Elfin
-> EW11 Modbus TCP gateway).
+> ✅ **VTR 300:** Confirmed working by a community user (SAVE Touch, original Systemair Modbus gateway, Modbus TCP).  
+> ✅ **VTR 500:** Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
+> ✅ **VTR 250:** Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
+> ⚙️ **VTR 350/B:** Reported working, but not yet fully verified across all features.  
+> ✅ **VSR 300:** Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
+> ✅ **VSR 500 (CD4 / legacy):** Confirmed working by a community user – fan control, temperature control and sensor values tested.
 
 ------------------------------------------------------------------------
 
