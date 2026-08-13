@@ -31,5 +31,55 @@
         }
       }
     }
+  },
+  "entity": {
+    "select": {
+      "manual_speed": {
+        "name": "Manual fan speed",
+        "state": {
+          "stop": "Stop",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
+        }
+      }
+    },
+    "fan": {
+      "ventilation_fan": {
+        "name": "Ventilation fan"
+      }
+    },
+    "number": {
+      "cd4_supply_temperature_setpoint": {
+        "name": "Desired supply air temperature"
+      }
+    },
+    "climate": {
+      "cd4_climate": {
+        "name": "Ventilation",
+        "state_attributes": {
+          "fan_mode": {
+            "name": "Fan mode",
+            "state": {
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High",
+              "off": "Off"
+            }
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "cd4_preheater_active": {
+        "name": "Preheater active"
+      },
+      "cd4_reheater_active": {
+        "name": "Reheater active"
+      },
+      "cd4_heater_relay_active": {
+        "name": "Heater relay active"
+      }
+    }
   }
 }

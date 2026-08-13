@@ -78,7 +78,27 @@ class ManualSpeedSelect(SystemairBaseEntity, SelectEntity):
         self._client = client
         self._model = model
         self._attr_unique_id = f"{entry.entry_id}_manual_speed_select"
-        self._attr_options = list(model.MANUAL_SPEED_OPTIONS.keys())
+
+        if getattr(model, "model_id", None) == "legacy_cd4":
+            self._attr_entity_registry_enabled_default = False
+
+        options = list(model.MANUAL_SPEED_OPTIONS.keys())
+
+        # CD4 can be configured to disallow manual fan stop. Do not expose
+        # "Stop" in that case; Home Assistant should only offer operations
+        # that the physical controller actually supports.
+        if getattr(model, "model_id", None) == "legacy_cd4" and not self._stop_allowed():
+            stop_option = getattr(model, "MANUAL_SPEED_STOP_OPTION", "stop")
+            options = [option for option in options if option != stop_option]
+
+        self._attr_options = options
+
+    def _stop_allowed(self) -> bool:
+        raw = self.coordinator.data.get("fan_manual_stop_allowed_register")
+        try:
+            return int(float(raw)) == 1
+        except (TypeError, ValueError):
+            return False
 
     @property
     def current_option(self) -> str | None:
@@ -99,7 +119,15 @@ class ManualSpeedSelect(SystemairBaseEntity, SelectEntity):
         if option not in self._model.MANUAL_SPEED_OPTIONS:
             raise HomeAssistantError("Invalid option")
 
-        await self._client.write_register(self._model.ADDR_MANUAL_SPEED_COMMAND, self._model.MANUAL_SPEED_OPTIONS[option])
+        if getattr(self._model, "model_id", None) == "legacy_cd4":
+            stop_option = getattr(self._model, "MANUAL_SPEED_STOP_OPTION", "Stop")
+            if option == stop_option and not self._stop_allowed():
+                raise HomeAssistantError("Manual fan stop is not allowed by this CD4 unit")
+
+        await self._client.write_register(
+            self._model.ADDR_MANUAL_SPEED_COMMAND,
+            self._model.MANUAL_SPEED_OPTIONS[option],
+        )
         await self.coordinator.async_request_refresh()
 
 

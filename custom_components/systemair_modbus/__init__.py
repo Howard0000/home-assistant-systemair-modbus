@@ -24,8 +24,8 @@ from .coordinator import SystemairCoordinator
 from .modbus import ModbusTcpClient
 from .models import MODEL_REGISTRY
 
-# CD4: kun sensorer (tryggest)
-PLATFORMS_LEGACY_CD4 = ["sensor", "select"]
+# Platforms supported by the legacy CD4 model.
+PLATFORMS_LEGACY_CD4 = ["sensor", "select", "binary_sensor", "fan", "climate"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Velg plattformer basert på modell (CD4 kun sensor)
+    # Velg plattformer basert på modell
     platforms = PLATFORMS_LEGACY_CD4 if model_id == "legacy_cd4" else list(PLATFORMS)
 
     hass.data.setdefault(DOMAIN, {})

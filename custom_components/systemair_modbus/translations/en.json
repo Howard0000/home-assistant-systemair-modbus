@@ -97,6 +97,83 @@
       },
       "calculated_exhaust_temperature": {
         "name": "Calculated exhaust air temperature"
+      },
+      "manual_mode_command_register": {
+        "name": "Manual fan speed – raw value"
+      },
+      "saf_speed_low_rpm": {
+        "name": "Supply fan – low speed"
+      },
+      "eaf_speed_low_rpm": {
+        "name": "Extract fan – low speed"
+      },
+      "saf_speed_normal": {
+        "name": "Supply fan – normal speed"
+      },
+      "eaf_speed_normal": {
+        "name": "Extract fan – normal speed"
+      },
+      "saf_speed_high": {
+        "name": "Supply fan – high speed"
+      },
+      "eaf_speed_high": {
+        "name": "Extract fan – high speed"
+      },
+      "saf_pwm": {
+        "name": "Supply fan – output"
+      },
+      "eaf_pwm": {
+        "name": "Extract fan – output"
+      },
+      "fan_speed_level_cd": {
+        "name": "Active fan level",
+        "state": {
+          "stop": "Stop",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High",
+          "unknown": "Unknown"
+        }
+      },
+      "temperature_sensor_1": {
+        "name": "Supply air temperature"
+      },
+      "temperature_sensor_2": {
+        "name": "Extract air temperature"
+      },
+      "temperature_sensor_3": {
+        "name": "Exhaust air temperature"
+      },
+      "temperature_sensor_4": {
+        "name": "Overheat / frost protection temperature"
+      },
+      "temperature_sensor_5": {
+        "name": "Outdoor air temperature"
+      },
+      "temperature_sensor_state": {
+        "name": "Temperature sensor status – raw value"
+      },
+      "rotor_state": {
+        "name": "Rotor status – raw value"
+      },
+      "defrost_state": {
+        "name": "Defrost status",
+        "state": {
+          "inactive": "Inactive",
+          "reduced_flow": "Reduced airflow",
+          "bypass": "Bypass",
+          "stop": "Fan stop",
+          "unknown": "Unknown"
+        }
+      },
+      "system_type": {
+        "name": "System type"
+      },
+      "filter_replacement_period": {
+        "name": "Filter replacement interval (months)"
+      },
+      "filter_days": {
+        "name": "Days since filter replacement"
       }
     },
     "switch": {
@@ -112,7 +189,13 @@
         "name": "Mode selection"
       },
       "manual_speed": {
-        "name": "Manual fan speed"
+        "name": "Manual fan speed",
+        "state": {
+          "stop": "Stop",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
+        }
       },
       "free_cooling_min_saf": {
         "name": "Free cooling – min supply"
@@ -193,6 +276,9 @@
       },
       "filter_replacement_period": {
         "name": "Filter interval (months)"
+      },
+      "cd4_supply_temperature_setpoint": {
+        "name": "Desired supply air temperature"
       }
     },
     "binary_sensor": {
@@ -228,11 +314,43 @@
       },
       "pressure_guard_active": {
         "name": "Pressure guard active"
+      },
+      "cd4_rotor_active": {
+        "name": "Rotor active"
+      },
+      "cd4_alarm_relay_active": {
+        "name": "Alarm relay"
+      },
+      "cd4_manual_fan_stop_allowed": {
+        "name": "Manual fan stop allowed"
+      },
+      "cd4_preheater_active": {
+        "name": "Preheater active"
+      },
+      "cd4_reheater_active": {
+        "name": "Reheater active"
+      },
+      "cd4_heater_relay_active": {
+        "name": "Heater relay active"
       }
     },
     "climate": {
       "climate": {
         "name": "Ventilation"
+      },
+      "cd4_climate": {
+        "name": "Ventilation",
+        "state_attributes": {
+          "fan_mode": {
+            "name": "Fan mode",
+            "state": {
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High",
+              "off": "Off"
+            }
+          }
+        }
       }
     },
     "button": {
@@ -265,6 +383,11 @@
       },
       "filter_replaced": {
         "name": "Filter replaced"
+      }
+    },
+    "fan": {
+      "ventilation_fan": {
+        "name": "Ventilation fan"
       }
     }
   },
