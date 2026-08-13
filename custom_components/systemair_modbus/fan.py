@@ -65,7 +65,7 @@ class SystemairManualSpeedFan(SystemairBaseEntity, FanEntity):
 
     @property
     def _stop_option(self) -> str:
-        return getattr(self._model, "MANUAL_SPEED_STOP_OPTION", "Stop")
+        return getattr(self._model, "MANUAL_SPEED_STOP_OPTION", "stop")
 
     def _current_speed(self) -> str | None:
         raw = self.coordinator.data.get("manual_mode_command_register")
@@ -147,7 +147,7 @@ class SystemairManualSpeedFan(SystemairBaseEntity, FanEntity):
             return
 
         default_speed = (
-            "Normal" if "Normal" in self._speed_order else self._speed_order[0]
+            "normal" if "normal" in self._speed_order else self._speed_order[0]
         )
         await self._write_speed(default_speed)
 

@@ -88,7 +88,7 @@ class ManualSpeedSelect(SystemairBaseEntity, SelectEntity):
         # "Stop" in that case; Home Assistant should only offer operations
         # that the physical controller actually supports.
         if getattr(model, "model_id", None) == "legacy_cd4" and not self._stop_allowed():
-            stop_option = getattr(model, "MANUAL_SPEED_STOP_OPTION", "Stop")
+            stop_option = getattr(model, "MANUAL_SPEED_STOP_OPTION", "stop")
             options = [option for option in options if option != stop_option]
 
         self._attr_options = options

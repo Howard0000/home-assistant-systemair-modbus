@@ -30,10 +30,10 @@ class Cd4Model:
     ADDR_MANUAL_SPEED_COMMAND = r(100)
 
     MANUAL_SPEED_OPTIONS: dict[str, int] = {
-        "Stop": 0,
-        "Low": 1,
-        "Normal": 2,
-        "High": 3,
+        "stop": 0,
+        "low": 1,
+        "normal": 2,
+        "high": 3,
     }
     MANUAL_SPEED_OPTIONS_INV: dict[int, str] = {
         v: k for k, v in MANUAL_SPEED_OPTIONS.items()
@@ -41,8 +41,8 @@ class Cd4Model:
 
     # Ordered manual speeds exposed through Home Assistant's fan percentage API.
     # "Stop" is deliberately excluded: percentage 0 is handled as off.
-    MANUAL_SPEED_ORDER: tuple[str, ...] = ("Low", "Normal", "High")
-    MANUAL_SPEED_STOP_OPTION = "Stop"
+    MANUAL_SPEED_ORDER: tuple[str, ...] = ("low", "normal", "high")
+    MANUAL_SPEED_STOP_OPTION = "stop"
 
     # --- Supply-air temperature control (CD4) ---
     # Systemair CD panel documentation describes five discrete supply-air
@@ -61,7 +61,9 @@ class Cd4Model:
         "saf_speed_rpm",
         "eaf_speed_rpm",
 
-        # Temperature inputs.
+        # Phase 1 fan diagnostics
+
+        # Phase 1 temperature inputs.
         # Mapping is documented by Systemair:
         # TEMP_IN1=SS (supply), TEMP_IN2=ETS (extract),
         # TEMP_IN3=EHS (exhaust), TEMP_IN4=OT/FPS, TEMP_IN5=outdoor.
@@ -71,7 +73,7 @@ class Cd4Model:
         "temperature_sensor_4",
         "temperature_sensor_5",
 
-        # Operating diagnostics.
+        # Phase 1 operating diagnostics.
         # rotor_state and temperature_sensor_state are still read, but kept
         # disabled by default until their bit/state mappings are verified.
         # The relay/capability values are exposed as binary_sensor entities.
@@ -441,8 +443,8 @@ class Cd4Model:
 
         out["mode_status_register"] = lvl
 
-        # Legacy compatibility values retained in coordinator data.
-        # CD4 does not expose these as Home Assistant entities.
+        # SAVE-oriented derived values: kept for compatibility for now.
+        # CD4 sensor.py currently does not expose derived SAVE sensors.
         out["active_season"] = "unknown"
         out["iaq_level_text"] = "unknown"
         out["regulation_mode_text"] = "unknown"

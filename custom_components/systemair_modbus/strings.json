@@ -37,10 +37,10 @@
       "manual_speed": {
         "name": "Manual fan speed",
         "state": {
-          "Stop": "Stop",
-          "Low": "Low",
-          "Normal": "Normal",
-          "High": "High"
+          "stop": "Stop",
+          "low": "Low",
+          "normal": "Normal",
+          "high": "High"
         }
       }
     },

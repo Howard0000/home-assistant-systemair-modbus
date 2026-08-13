@@ -191,10 +191,10 @@
       "manual_speed": {
         "name": "Manuell viftehastighet",
         "state": {
-          "Stop": "Stopp",
-          "Low": "Lav",
-          "Normal": "Normal",
-          "High": "Høy"
+          "stop": "Stopp",
+          "low": "Lav",
+          "normal": "Normal",
+          "high": "Høy"
         }
       },
       "free_cooling_min_saf": {
