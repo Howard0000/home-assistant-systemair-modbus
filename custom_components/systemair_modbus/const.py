@@ -18,7 +18,7 @@ DEFAULT_GATEWAY_PROFILE = GATEWAY_PROFILE_GENERIC  # evt. bytt til SAVE_CONNECT 
 
 DEFAULT_PORT = 502
 DEFAULT_SLAVE = 1
-DEFAULT_SCAN_INTERVAL = 10  # seconds
+DEFAULT_SCAN_INTERVAL = 30  # seconds
 
 PLATFORMS: list[str] = ["sensor", "binary_sensor", "switch", "select", "number", "climate", "button"]
 

@@ -121,14 +121,31 @@ class SaveModel:
     MANUAL_SPEED_OPTIONS_INV: dict[int, str] = {v: k for k, v in MANUAL_SPEED_OPTIONS.items()}
 
     # Free cooling minimum fan speed uses the same discrete speed steps as manual speed.
-    FREE_COOLING_MIN_SPEED_OPTIONS: dict[str, int] = MANUAL_SPEED_OPTIONS
-    FREE_COOLING_MIN_SPEED_OPTIONS_INV: dict[int, str] = {v: k for k, v in FREE_COOLING_MIN_SPEED_OPTIONS.items()}
+    # Free cooling uses its own speed scale in the SAVE Modbus map:
+    # 3 = Normal, 4 = High, 5 = Maximum.
+    FREE_COOLING_MIN_SPEED_OPTIONS: dict[str, int] = {
+        "normal": 3,
+        "high": 4,
+        "maximum": 5,
+    }
+    FREE_COOLING_MIN_SPEED_OPTIONS_INV: dict[int, str] = {
+        v: k for k, v in FREE_COOLING_MIN_SPEED_OPTIONS.items()
+    }
 
     # Backwards-compatible aliases (older code used these names).
     MODE_COMMAND_OPTIONS = COMMAND_MODE_OPTIONS
     MODE_STATUS_TO_LABEL = STATUS_MODE_TO_LABEL
 
     REGISTERS: list[RegisterDef] = [
+        # --- Auto / demand-control diagnostics (issue #79) ---
+        # Systemair PDF IR 1003 / 1004 / 1007 / 1061 / 1062.
+        # Addresses below are PDF register number - 1.
+        RegisterDef(key='demand_supply_fan_speed', address=1002, input_type='input', data_type='uint16'),
+        RegisterDef(key='demand_active_controller', address=1003, input_type='input', data_type='uint16'),
+        RegisterDef(key='demand_extract_fan_speed', address=1006, input_type='input', data_type='uint16'),
+        RegisterDef(key='demand_control_enabled', address=1060, input_type='input', data_type='uint16'),
+        RegisterDef(key='auto_mode_source', address=1061, input_type='input', data_type='uint16'),
+
         # --- Modes and time settings ---
         RegisterDef(key='summer_winter_operation_1_0', address=1038, input_type='input', data_type='uint16'),
         RegisterDef(key='holiday_mode_duration', address=1100, input_type='holding', data_type='uint16', unit='days'),
@@ -189,7 +206,9 @@ class SaveModel:
         RegisterDef(key='supply_air_room_exhaust_reg', address=2030, input_type='holding', data_type='uint16'),
 
         # --- Heating and humidity ---
+        RegisterDef(key='heater_from_satc', address=2113, input_type='input', data_type='uint16', unit='%'),
         RegisterDef(key='triac_after_manual_override', address=2148, input_type='input', data_type='uint16', unit='%'),
+        RegisterDef(key='heating_active', address=3102, input_type='input', data_type='uint16'),
         RegisterDef(key='moisture_extraction_sp', address=2202, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
         RegisterDef(key='calculated_moisture_extraction', address=2210, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
         RegisterDef(key='calculated_moisture_intake', address=2211, input_type='holding', data_type='uint16', unit='%', device_class='humidity'),
@@ -198,6 +217,7 @@ class SaveModel:
         RegisterDef(key='eco_heat_offset', address=2503, input_type='holding', data_type='uint16', scale=0.1, precision=1, unit='°C', device_class='temperature'),
         RegisterDef(key='eco_mode', address=2504, input_type='holding', data_type='uint16'),
         RegisterDef(key='eco_function_active', address=2505, input_type='input', data_type='uint16'),
+        RegisterDef(key='eco_mode_active', address=2520, input_type='input', data_type='uint16'),
 
         # --- Free Cooling ---
         RegisterDef(key='free_cooling_enable', address=4100, input_type='holding', data_type='uint16'),
@@ -209,9 +229,13 @@ class SaveModel:
         RegisterDef(key='free_cooling_start_time_m', address=4106, input_type='holding', data_type='uint16'),
         RegisterDef(key='free_cooling_end_time_h', address=4107, input_type='holding', data_type='uint16'),
         RegisterDef(key='free_cooling_end_time_m', address=4108, input_type='holding', data_type='uint16'),
+        RegisterDef(key='free_cooling_function_active', address=3101, input_type='input', data_type='uint16'),
         RegisterDef(key='free_cooling_active', address=4110, input_type='input', data_type='uint16'),
         RegisterDef(key='free_cooling_min_speed_saf', address=4111, input_type='holding', data_type='uint16'),
         RegisterDef(key='free_cooling_min_speed_eaf', address=4112, input_type='holding', data_type='uint16'),
+        RegisterDef(key='free_cooling_state', address=4113, input_type='input', data_type='uint16'),
+        RegisterDef(key='free_cooling_heater_block_counter', address=4118, input_type='input', data_type='uint16', unit='s'),
+        RegisterDef(key='free_cooling_reliable_temperatures', address=4119, input_type='input', data_type='uint16'),
 
         # --- Filter ---
         RegisterDef(key='filter_replacement_period', address=7000, input_type='holding', data_type='uint16', unit='months'),
@@ -234,6 +258,7 @@ class SaveModel:
         # --- Outputs and alarms ---
         RegisterDef(key='supply_air_fan_pwr_fact', address=14000, input_type='input', data_type='uint16', unit='%'),
         RegisterDef(key='extractor_fan_pwr_fact', address=14001, input_type='input', data_type='uint16', unit='%'),
+        RegisterDef(key='heater_y1_analog_output', address=14100, input_type='input', data_type='uint16', unit='%'),
         RegisterDef(key='heat_recovery', address=14102, input_type='input', data_type='uint16', unit='%'),
         RegisterDef(key='triac_control_signal', address=14380, input_type='input', data_type='uint16'),
         RegisterDef(key='filter_alarm', address=15141, input_type='input', data_type='uint16'),
@@ -347,7 +372,7 @@ class SaveModel:
         man = _to_int(data.get("manual_mode_command_register"), -1)
 
         if mode == 0:
-            out["mode_status_text"] = "auto_demand_control"
+            out["mode_status_text"] = "auto"
         elif mode == 1:
             out["mode_status_text"] = {
                 0: "manual_stop",

@@ -57,6 +57,10 @@ def _pretty_reg_name(key: str) -> str:
 
         # Free cooling (night cooling)
         "free_cooling_active": "Free cooling active",
+        "free_cooling_function_active": "Free cooling function active",
+        "free_cooling_state": "Free cooling state",
+        "free_cooling_heater_block_counter": "Free cooling heater block counter",
+        "free_cooling_reliable_temperatures": "Free cooling reliable temperatures",
         "free_cooling_daytime_min_temp": "Free cooling – daytime min temp",
         "free_cooling_night_high_limit": "Free cooling – night high limit",
         "free_cooling_night_low_limit": "Free cooling – night low limit",
@@ -154,6 +158,11 @@ ENABLED_RAW_KEYS: set[str] = {
     "relative_moisture_extraction",
     # Heat recovery
     "heat_recovery",
+    # SAVE issue #76 - user-facing reheater output
+    "triac_after_manual_override",
+    # SAVE issue #78:
+    # The internal state/counter registers are available as diagnostics,
+    # but are intentionally disabled by default after real-unit testing.
 }
 
 
@@ -170,6 +179,15 @@ CD4_TRANSLATED_SENSOR_KEYS: set[str] = {
     "saf_pwm",
     "eaf_pwm",
     "fan_speed_level_cd",
+    "temperature_level_command_register",
+    "temperature_setpoint",
+    "temperature_level_1",
+    "temperature_level_2",
+    "temperature_level_3",
+    "temperature_level_4",
+    "temperature_level_5",
+    "temperature_regulation_setpoint",
+    "temperature_setting_step",
     "temperature_sensor_1",
     "temperature_sensor_2",
     "temperature_sensor_3",
@@ -194,16 +212,9 @@ CD4_BINARY_SENSOR_SOURCE_KEYS: set[str] = {
     "alarm_relay_active",
 }
 
-# CD4 temperature-control registers are read by the coordinator for the
-# temperature control entity, but are not useful as separate raw sensors.
+# Registers represented by dedicated higher-level entities and therefore not
+# exposed as duplicate numeric sensors.
 CD4_INTERNAL_SENSOR_KEYS: set[str] = {
-    "temperature_level_command_register",
-    "temperature_setpoint_level",
-    "temperature_level_1",
-    "temperature_level_2",
-    "temperature_level_3",
-    "temperature_level_4",
-    "temperature_level_5",
     "pcu_pb_relays",
 }
 
@@ -221,6 +232,44 @@ CD4_ENUM_VALUE_MAPS: dict[str, dict[int, str]] = {
         1: "reduced_flow",
         2: "bypass",
         3: "stop",
+    },
+}
+
+
+SAVE_BINARY_SENSOR_SOURCE_KEYS: set[str] = {
+    "heating_active",
+    "eco_mode_active",
+    "eco_function_active",
+    "free_cooling_active",
+    "free_cooling_function_active",
+    "free_cooling_reliable_temperatures",
+    "demand_control_enabled",
+}
+
+# SAVE diagnostics that should use translations even when disabled by default.
+SAVE_TRANSLATED_SENSOR_KEYS: set[str] = {
+    "auto_mode_source",
+    "demand_active_controller",
+    "demand_supply_fan_speed",
+    "demand_extract_fan_speed",
+}
+
+SAVE_ENUM_VALUE_MAPS: dict[str, dict[int, str]] = {
+    "free_cooling_state": {
+        0: "disabled",
+        1: "enabled",
+        2: "daytime",
+        3: "temperatures_not_reliable",
+    },
+    "auto_mode_source": {
+        0: "external_control",
+        1: "demand_control",
+        2: "week_schedule",
+        3: "configuration_fault",
+    },
+    "demand_active_controller": {
+        0: "co2",
+        1: "rh",
     },
 }
 
@@ -255,6 +304,8 @@ async def async_setup_entry(
         if is_cd4 and _base_key(reg.key) in CD4_BINARY_SENSOR_SOURCE_KEYS:
             continue
         if is_cd4 and _base_key(reg.key) in CD4_INTERNAL_SENSOR_KEYS:
+            continue
+        if not is_cd4 and _base_key(reg.key) in SAVE_BINARY_SENSOR_SOURCE_KEYS:
             continue
 
         entities.append(SystemairRegisterSensor(coordinator, entry, reg))
@@ -298,6 +349,8 @@ class SystemairRegisterSensor(SystemairBaseEntity, SensorEntity):
         translated_keys = set(ENABLED_RAW_KEYS)
         if self._is_cd4:
             translated_keys |= CD4_TRANSLATED_SENSOR_KEYS
+        else:
+            translated_keys |= SAVE_TRANSLATED_SENSOR_KEYS
 
         if self._base_key in translated_keys:
             self._attr_translation_key = self._base_key
@@ -321,7 +374,10 @@ class SystemairRegisterSensor(SystemairBaseEntity, SensorEntity):
         if reg.state_class:
             self._attr_state_class = reg.state_class
 
-        enum_map = CD4_ENUM_VALUE_MAPS.get(self._base_key) if self._is_cd4 else None
+        if self._is_cd4:
+            enum_map = CD4_ENUM_VALUE_MAPS.get(self._base_key)
+        else:
+            enum_map = SAVE_ENUM_VALUE_MAPS.get(self._base_key)
         if enum_map is not None:
             self._enum_map = enum_map
             self._attr_device_class = SensorDeviceClass.ENUM

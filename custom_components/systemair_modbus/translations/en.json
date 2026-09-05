@@ -174,6 +174,79 @@
       },
       "filter_days": {
         "name": "Days since filter replacement"
+      },
+      "heater_from_satc": {
+        "name": "Reheater heating demand"
+      },
+      "triac_after_manual_override": {
+        "name": "Reheater output"
+      },
+      "heater_y1_analog_output": {
+        "name": "Reheater Y1 output"
+      },
+      "free_cooling_heater_block_counter": {
+        "name": "Heating blocked after free cooling"
+      },
+      "free_cooling_state": {
+        "name": "Free cooling state",
+        "state": {
+          "disabled": "Disabled",
+          "enabled": "Enabled",
+          "daytime": "Daytime",
+          "temperatures_not_reliable": "Temperatures not reliable",
+          "unknown": "Unknown"
+        }
+      },
+      "auto_mode_source": {
+        "name": "Auto mode source",
+        "state": {
+          "external_control": "External control",
+          "demand_control": "Demand control",
+          "week_schedule": "Week schedule",
+          "configuration_fault": "Configuration fault",
+          "unknown": "Unknown"
+        }
+      },
+      "demand_active_controller": {
+        "name": "Demand control – reported controller",
+        "state": {
+          "co2": "CO₂",
+          "rh": "RH",
+          "unknown": "Unknown"
+        }
+      },
+      "demand_supply_fan_speed": {
+        "name": "Demand control – supply fan speed"
+      },
+      "demand_extract_fan_speed": {
+        "name": "Demand control – extract fan speed"
+      },
+      "temperature_level_command_register": {
+        "name": "Temperature level command"
+      },
+      "temperature_setpoint": {
+        "name": "Temperature setpoint"
+      },
+      "temperature_level_1": {
+        "name": "Legacy temperature level 1"
+      },
+      "temperature_level_2": {
+        "name": "Legacy temperature level 2"
+      },
+      "temperature_level_3": {
+        "name": "Legacy temperature level 3"
+      },
+      "temperature_level_4": {
+        "name": "Legacy temperature level 4"
+      },
+      "temperature_level_5": {
+        "name": "Legacy temperature level 5"
+      },
+      "temperature_regulation_setpoint": {
+        "name": "Temperature regulation setpoint"
+      },
+      "temperature_setting_step": {
+        "name": "Temperature setting step"
       }
     },
     "switch": {
@@ -198,10 +271,20 @@
         }
       },
       "free_cooling_min_saf": {
-        "name": "Free cooling – min supply"
+        "name": "Free cooling – minimum supply fan speed",
+        "state": {
+          "normal": "Normal",
+          "high": "High",
+          "maximum": "Maximum"
+        }
       },
       "free_cooling_min_eaf": {
-        "name": "Free cooling – min extract"
+        "name": "Free cooling – minimum extract fan speed",
+        "state": {
+          "normal": "Normal",
+          "high": "High",
+          "maximum": "Maximum"
+        }
       },
       "manual_speed_command": {
         "name": "Manual speed"
@@ -315,6 +398,9 @@
       "pressure_guard_active": {
         "name": "Pressure guard active"
       },
+      "heating_active": {
+        "name": "Reheater active"
+      },
       "cd4_rotor_active": {
         "name": "Rotor active"
       },
@@ -332,6 +418,18 @@
       },
       "cd4_heater_relay_active": {
         "name": "Heater relay active"
+      },
+      "eco_mode_active": {
+        "name": "Eco active"
+      },
+      "free_cooling_function_active": {
+        "name": "Free cooling function active"
+      },
+      "free_cooling_reliable_temperatures": {
+        "name": "Free cooling temperatures reliable"
+      },
+      "demand_control_enabled": {
+        "name": "Demand control enabled"
       }
     },
     "climate": {

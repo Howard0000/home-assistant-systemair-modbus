@@ -60,7 +60,7 @@ async def _async_validate_connection(
 
     client = ModbusTcpClient(host=host, port=port, slave=slave, gateway_profile=gateway_profile)
 
-    # Keep default at 10s, but allow more room for SAVE Connect safe mode
+    # Use a short validation timeout, but allow more room for SAVE Connect safe mode
     timeout_s = 10
     if gateway_profile == GATEWAY_PROFILE_SAVE_CONNECT:
         timeout_s = 25
