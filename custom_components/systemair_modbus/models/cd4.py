@@ -1,8 +1,8 @@
 """Systemair CD4 / D24810 legacy model.
 
-The model exposes the documented CD4 fan controls, five-step supply-air
-temperature control and selected operating diagnostics while keeping the
-legacy register map conservative.
+The model exposes documented CD4 fan controls, supply-air temperature
+control and selected operating diagnostics while keeping the legacy
+register map conservative.
 
 Addresses below are Modbus client register offsets (0-based), i.e. Systemair
 documentation address minus 1.
@@ -45,13 +45,17 @@ class Cd4Model:
     MANUAL_SPEED_STOP_OPTION = "stop"
 
     # --- Supply-air temperature control (CD4) ---
-    # Systemair CD panel documentation describes five discrete supply-air
-    # temperature steps. Level 0 is manual summer mode.
+    # D24810 A007 documents REG_HC_TEMP_LVL as the R/W temperature
+    # set-point level (0 = manual summer mode, 1..5 legacy levels,
+    # 6..29 extended levels). Real VSR500/CD4 testing confirms that the
+    # user-facing range is 12..22 °C as levels 1..11.
     #
     # Register list:
     #   REG_HC_TEMP_LVL   PDF 207 -> Modbus offset 206, R/W command
-    #   REG_HC_TEMP_SP    PDF 208 -> Modbus offset 207, read active level
-    #   REG_HC_TEMP_LVL1..5 PDF 209..213 -> offsets 208..212, 0.1 °C
+    #   REG_HC_TEMP_SP    PDF 208 -> Modbus offset 207, actual setpoint * 10
+    #   REG_HC_TEMP_LVL1..5 PDF 209..213 -> offsets 208..212, legacy levels
+    #   REG_HC_TEMP_SP_DEG PDF 222 -> offset 221, regulation setpoint * 10
+    #   REG_HC_TEMP_SP_DEG_STEP PDF 236 -> offset 235, step size * 10
     ADDR_TEMPERATURE_LEVEL_COMMAND = r(206)
 
     # Raw registers enabled by default in Home Assistant.
@@ -61,7 +65,9 @@ class Cd4Model:
         "saf_speed_rpm",
         "eaf_speed_rpm",
 
-        # Phase 1 fan diagnostics
+        # Temperature-control registers are read for the Climate entity and
+        # remain available as disabled diagnostic sensors. They are not enabled
+        # by default because the Climate entity is the user-facing control.
 
         # Phase 1 temperature inputs.
         # Mapping is documented by Systemair:
@@ -203,10 +209,15 @@ class Cd4Model:
             data_type="uint16",
         ),
         RegisterDef(
-            key="temperature_setpoint_level",
+            key="temperature_setpoint",
             address=r(207),
             input_type="holding",
-            data_type="uint16",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
         ),
         RegisterDef(
             key="temperature_level_1",
@@ -255,6 +266,30 @@ class Cd4Model:
         RegisterDef(
             key="temperature_level_5",
             address=r(212),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+
+        # D24810 A007 extended temperature regulation diagnostics.
+        RegisterDef(
+            key="temperature_regulation_setpoint",
+            address=r(221),
+            input_type="holding",
+            data_type="int16",
+            scale=0.1,
+            precision=1,
+            unit="°C",
+            device_class="temperature",
+            state_class="measurement",
+        ),
+        RegisterDef(
+            key="temperature_setting_step",
+            address=r(235),
             input_type="holding",
             data_type="int16",
             scale=0.1,

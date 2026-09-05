@@ -102,9 +102,44 @@ async def async_setup_entry(
                 "mdi:air-filter",
             ),
             FreeCoolingActive(entry, coordinator),
+            BoolFromRegister(
+                entry,
+                coordinator,
+                "free_cooling_function_active",
+                "free_cooling_function_active",
+                "mdi:snowflake-check",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                enabled_default=False,
+            ),
+            BoolFromRegister(
+                entry,
+                coordinator,
+                "free_cooling_reliable_temperatures",
+                "free_cooling_reliable_temperatures",
+                "mdi:thermometer-check",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                enabled_default=False,
+            ),
             CookerHoodActive(entry, coordinator),
             EcoFunctionActive(entry, coordinator),
+            EcoModeActive(entry, coordinator),
             PressureGuardActive(entry, coordinator),
+            BoolFromRegister(
+                entry,
+                coordinator,
+                "demand_control_enabled",
+                "demand_control_enabled",
+                "mdi:home-automation",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                enabled_default=False,
+            ),
+            BoolFromRegister(
+                entry,
+                coordinator,
+                "heating_active",
+                "heating_active",
+                "mdi:radiator",
+            ),
         ]
     )
 
@@ -226,10 +261,32 @@ class EcoFunctionActive(SystemairBaseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_eco_function_active_bin"
         self._attr_translation_key = "eco_function_active"
         self._attr_icon = "mdi:leaf"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_entity_registry_enabled_default = False
 
     @property
     def is_on(self) -> bool | None:
         raw = self.coordinator.data.get("eco_function_active")
+        if raw is None:
+            return None
+        try:
+            return int(float(raw)) > 0
+        except (TypeError, ValueError):
+            return None
+
+
+class EcoModeActive(SystemairBaseEntity, BinarySensorEntity):
+    """ECO mode active flag from REG_ECO_MODE_ACTIVE (0/1)."""
+
+    def __init__(self, entry: ConfigEntry, coordinator) -> None:
+        super().__init__(entry, coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_eco_mode_active_bin"
+        self._attr_translation_key = "eco_mode_active"
+        self._attr_icon = "mdi:leaf-circle"
+
+    @property
+    def is_on(self) -> bool | None:
+        raw = self.coordinator.data.get("eco_mode_active")
         if raw is None:
             return None
         try:
