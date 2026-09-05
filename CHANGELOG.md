@@ -5,6 +5,89 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0-beta.3] – 2026-09-05
+
+### Added
+
+* Added SAVE heater / Y1 output support:
+  * Heater analog output percentage
+  * Heater active status
+* Added SAVE ECO controls and diagnostics:
+  * ECO mode enabled
+  * ECO mode active
+  * ECO function active
+  * ECO heat offset
+* Expanded SAVE Free Cooling support and diagnostics:
+  * Clear distinction between enabled and active states
+  * Free Cooling state
+  * Reliable temperature status
+  * Heater block counter
+* Added SAVE Auto / Demand Control diagnostics:
+  * Auto mode source
+  * Demand control enabled
+  * Active demand controller
+  * Supply and extract fan demand values
+* Expanded CD4 Climate control:
+  * Supply-air temperature control from 12–22 °C in 1 °C steps
+  * Climate Off / Manual summer support
+  * Return from Off to the previous temperature
+* Expanded CD4 diagnostic register coverage
+
+### Changed
+
+* Changed the default Modbus polling interval from 10 to 30 seconds to
+  reduce Modbus traffic and potentially improve physical touch-display stability
+* Improved SAVE entity naming and presentation for ECO, Free Cooling,
+  heater output and Demand Control diagnostics
+* CD4 Climate temperature handling now follows the complete documented
+  OFF / 12–22 °C mapping instead of the previous five-step presentation
+* Updated English and Norwegian documentation for the expanded SAVE and CD4 support
+
+### Fixed
+
+* Fixed duplicate / ambiguous Free Cooling entity naming by clearly
+  separating enabled and active states
+* Improved CD4 Climate handling around temperature Off / Manual summer
+* Improved presentation and decoding of several SAVE diagnostic states
+
+### Notes
+
+* CD4 support remains experimental while testing continues on physical legacy units
+* The complete CD4 OFF / 12–22 °C register mapping has been verified on
+  physical VSR 500/CD4 hardware
+* Additional testing of Home Assistant Climate writes to physical CD4
+  controllers is especially welcome
+* The polling interval remains configurable in the integration options;
+  30 seconds is the new default
+
+### Testing wanted
+
+Feedback is especially welcome for:
+
+* SAVE heater / Y1 output
+* SAVE ECO enabled / active behaviour
+* SAVE Free Cooling states and diagnostics
+* SAVE Auto / Demand Control diagnostics
+* CD4 Climate control at 12 °C, 17 °C, 20 °C and 22 °C
+* CD4 Climate Off / Manual summer and return from Off
+* CD4 Fan control
+* Long-term Modbus and physical touch-display stability
+
+### Contributors
+
+Special thanks to:
+
+* **@stboee** for extensive SAVE register research, feature proposals and
+  testing across #76, #77, #78 and #79
+* **@gljo** for hardware testing and verification of the complete CD4
+  OFF / 12–22 °C temperature mapping
+* **@Ztaeyn** for reporting and helping investigate the physical
+  touch-display stability issue in #87
+* **@larstobi** for the original CD4 implementation and contributions
+  that the expanded CD4 support continues to build on
+
+---
+
 ## [1.3.0-beta.2] – 2026-08-13
 
 ### Added
