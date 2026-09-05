@@ -67,18 +67,26 @@ Ved usikkerhet, kontakt kvalifisert fagperson.
 
 ## 🚀 Nylige forbedringer
 
-Nylige versjoner inkluderer:
+v1.3.0-beta.3 inneholder betydelige forbedringer for både SAVE og eldre CD4-systemer:
 
--   Skrivebart tilluft-setpunkt direkte fra Home Assistant
--   Korrekt filter-reset ved bruk av native tidsstempel-register
--   Konfigurerbar filterbytte-periode
--   Beregnet avkasttemperatur-sensor
--   Profilbasert Modbus-håndtering for bedre stabilitet på SAVE Connect
-    og lignende gatewayer
+- Forbedret status og entiteter for SAVE ettervarme / varmeeffekt
+- Forbedret visning og diagnostikk for aktivert / aktiv ECO
+- Utvidet styring og diagnostikk for frikjøling
+- Nye diagnostiske entiteter for Auto / Demand Control
+- Standard pollingintervall er endret fra 10 til 30 sekunder for å redusere
+  Modbus-belastningen og potensielt forbedre stabiliteten til det fysiske touchdisplayet
+- Betydelig utvidet støtte for eldre CD4-systemer
+- Native CD4 Fan-entitet med sikker håndtering av manuell viftestopp
+- Oppdatert CD4 Climate-entitet med temperaturstyring fra 12–22 °C i 1 °C-trinn
+- Støtte for CD4 Manual summer / temperatur AV
+- Utvidet CD4-diagnostikk og registerstøtte
 
-## Integrasjonen er under aktiv utvikling med sterkt fokus på korrekthet, stabilitet og transparent entitetsoppførsel.
+Integrasjonen er under aktiv utvikling med sterkt fokus på korrekthet,
+stabilitet og transparent entitetsoppførsel.
 
-## 📋 Systemair SAVE -- støttede modeller
+---
+
+## 📋 Systemair SAVE – støttede modeller
 
 **Luftmengde-estimat (m³/h)** er kun tilgjengelig for modeller som er
 eksplisitt definert i koden og deler forventet Modbus-registerlayout.
@@ -89,53 +97,62 @@ eksplisitt definert i koden og deler forventet Modbus-registerlayout.
 
 ------------------------------------------------------------------------
 
-### 🧪 CD4 (legacy) -- eksperimentell støtte
+### 🧪 CD4 (legacy) – eksperimentell støtte
 
-Støtte for eldre Systemair-aggregater med **CD4-kontroller** er
-inkludert i integrasjonen og er betydelig utvidet i v1.3.0-beta.2.
+Støtte for eldre Systemair-aggregater med **CD4-kontroller** er inkludert
+i integrasjonen og har blitt betydelig utvidet i v1.3.0-beta.3.
 
 ⚠️ **Viktig:**
 
--   CD4 bruker et annet Modbus-registerkart enn SAVE
--   Støtten er fortsatt **eksperimentell** mens testing på ekte
-    aggregater pågår
--   Tilgjengelige funksjoner kan variere mellom eldre aggregatmodeller
-    og konfigurasjoner
+- CD4 bruker et annet Modbus-registerkart enn SAVE
+- Støtten er fortsatt **eksperimentell** mens testing på fysiske aggregater fortsetter
+- Tilgjengelige funksjoner kan variere mellom eldre aggregatmodeller og konfigurasjoner
 
 ### Hva som fungerer per nå
 
--   Native Home Assistant **Fan-entitet** for viftestyring
-    -   Stopp / Lav / Medium / Høy
-    -   Stopp vises bare når aggregatet tillater manuell stopp
--   Native Home Assistant **Climate-entitet**
-    -   Valg av ønsket tillufttemperatur i fem dokumenterte trinn
-    -   Visning av aktuell tillufttemperatur
-    -   Viftemodus direkte fra Climate-entiteten
-    -   Oppvarmingsstatus basert på faktisk ettervarmerstatus
--   Temperaturer for tilluft, avtrekk, avkast, uteluft og
-    overoppheting/frostbeskyttelse
--   Faktisk SF / EF RPM (turtall)
--   Status for rotor, ettervarmer, avriming og alarm
--   Filterstatus og grunnleggende systemverdier
--   Tekniske og rå CD4-verdier er tilgjengelige som diagnostikk der det
-    er relevant
+- Native Home Assistant **Fan-entitet** for viftestyring
+  - Av / Lav / Medium / Høy
+  - Av er bare tilgjengelig dersom aggregatet tillater manuell viftestopp
+- Native Home Assistant **Climate-entitet**
+  - Temperaturstyring fra 12–22 °C i 1 °C-trinn
+  - Av / Manual summer
+  - Aktuell tillufttemperatur
+  - Viftemodus kan styres direkte fra Climate-entiteten
+  - Varmestatus basert på faktisk status for ettervarmer
+- Tilluft-, avtrekk-, avkast-, ute- og overopphetings-/frostbeskyttelsestemperaturer
+- Faktiske SF / EF RPM-verdier
+- Status for rotor, ettervarmer, avriming og alarm
+- Filterstatus og grunnleggende systemverdier
+- Tekniske og rå CD4-verdier er tilgjengelige som diagnostiske entiteter der dette er relevant
+
+**Climate Av og Fan Av er to separate funksjoner.**
+
+Climate Av setter CD4-temperaturreguleringen til Manual summer /
+temperatur AV. Dette stopper **ikke** ventilasjonsviftene.
+
+Fan Av er bare tilgjengelig dersom aggregatet rapporterer at manuell
+viftestopp er tillatt.
 
 ### Testing og tilbakemelding
 
-Hvis du har et CD4-basert aggregat, er tilbakemeldingen din svært
-verdifull.
+Hvis du har et CD4-basert aggregat, er tilbakemeldinger svært verdifulle.
 
-Det er spesielt nyttig å få bekreftet:
+Hele mappingen for AV / 12–22 °C er verifisert på fysisk VSR 500/CD4-hardware.
+I denne betaen er det spesielt ønskelig med ytterligere testing av den ferdige
+Climate-styringen fra Home Assistant tilbake til fysisk CD4-kontroller.
 
--   Viftestyring: Stopp / Lav / Medium / Høy
--   Temperaturstyring i alle fem trinn
--   Aktuell og ønsket temperatur i Climate-entiteten
--   Oppvarmingsstatus
--   Mapping av temperaturfølere
--   Rotor-, ettervarmer-, avrimings- og alarmstatus
--   Generell stabilitet og Modbus-kommunikasjon
+Test gjerne, dersom mulig:
 
-Rapporter gjerne erfaringer og eventuelle feil via GitHub Issues.
+- 12 °C
+- 17 °C
+- 20 °C
+- 22 °C
+- Climate Av / Manual summer
+- Retur fra Av til forrige temperatur
+- Viftestyring: Av / Lav / Medium / Høy
+- Generell stabilitet og Modbus-kommunikasjon
+
+Rapporter gjerne både vellykkede tester og uventet oppførsel via GitHub Issues.
 
 ------------------------------------------------------------------------
 
@@ -412,6 +429,14 @@ Spesiell takk til [**larstobi**](https://github.com/larstobi) for bidrag
 og testing av CD4-støtten, inkludert registerinformasjon og arbeidet med
 viftestyring som bidro til videreutviklingen av den nye
 CD4-implementasjonen.
+
+Spesiell takk til [**stboee**](https://github.com/stboee) for omfattende
+registerundersøkelser, funksjonsforslag og testing av SAVE-funksjonalitet
+knyttet til ettervarme, ECO, frikjøling og Auto / Demand Control.
+
+Spesiell takk til [**gljo**](https://github.com/gljo) for omfattende
+hardware-testing av den eldre CD4-implementasjonen, inkludert verifisering
+av hele temperaturmappingen AV / 12–22 °C på fysisk VSR 500/CD4.
 
 En AI-assistent har blitt brukt til støtte i feilsøking, refaktorering
 og dokumentasjonsforbedringer under utviklingen.
