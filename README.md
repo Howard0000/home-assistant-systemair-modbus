@@ -68,16 +68,22 @@ If in doubt, consult a qualified technician.
 
 ## 🚀 Recent improvements
 
-Recent versions include:
+v1.3.0-beta.3 includes major improvements for both SAVE and legacy CD4 systems:
 
--   Writable supply air setpoint directly from Home Assistant
--   Proper filter reset using native timestamp registers
--   Configurable filter replacement period
--   Calculated exhaust air temperature sensor
--   Profile-based Modbus handling for improved stability on SAVE Connect
-    and similar gateways
+-   Improved SAVE heater / after-heating status and output entities
+-   Improved ECO enabled / active presentation and diagnostics
+-   Expanded Free Cooling controls and diagnostics
+-   Added Auto / Demand Control diagnostic entities
+-   Reduced the default polling interval from 10 to 30 seconds to reduce
+    Modbus load and potentially improve physical touch-display stability
+-   Significantly expanded legacy CD4 support
+-   Native CD4 Fan entity with safe handling of manual fan stop
+-   Updated CD4 Climate entity with 12--22 °C control in 1 °C steps
+-   CD4 Manual summer / temperature OFF support
+-   Expanded CD4 diagnostic register coverage
 
-## The integration is under active development with a strong focus on correctness, stability and transparent entity behavior.
+The integration is under active development with a strong focus on
+correctness, stability and transparent entity behavior.
 
 ## 📋 Systemair SAVE -- supported models
 
@@ -95,7 +101,7 @@ layout.
 
 Support for older Systemair units using the **CD4 controller** is
 included in the integration and has been significantly expanded in
-v1.3.0-beta.2.
+v1.3.0-beta.3.
 
 ⚠️ **Important:**
 
@@ -109,9 +115,10 @@ v1.3.0-beta.2.
 
 -   Native Home Assistant **Fan entity** for fan control
     -   Off / Low / Medium / High
-    -   Off is only available when manual stop is supported by the unit
+    -   Off is only available when manual fan stop is supported by the unit
 -   Native Home Assistant **Climate entity**
-    -   Five documented supply-air temperature steps
+    -   Supply-air temperature control from 12--22 °C in 1 °C steps
+    -   Off / Manual summer mode
     -   Current supply-air temperature
     -   Fan mode control directly from the Climate entity
     -   Heating state based on actual reheater status
@@ -123,23 +130,38 @@ v1.3.0-beta.2.
 -   Technical and raw CD4 values are available as diagnostic entities
     where appropriate
 
+**Climate Off and Fan Off are separate functions.**
+
+Climate Off sets the CD4 temperature regulation to Manual summer /
+temperature OFF. It does **not** stop the ventilation fans.
+
+Fan Off is only available when the unit reports that manual fan stop is
+supported.
+
 ### Testing and feedback
 
 If you have a CD4-based unit, your feedback is extremely valuable.
 
-Feedback is especially useful for:
+The complete OFF / 12--22 °C temperature mapping has been verified on
+physical VSR 500/CD4 hardware. Additional testing of the finished Home
+Assistant Climate control writing back to physical CD4 controllers is
+especially useful in this beta.
 
+Please test, where possible:
+
+-   12 °C
+-   17 °C
+-   20 °C
+-   22 °C
+-   Climate Off / Manual summer
+-   Returning from Off to the previous temperature
 -   Fan control: Off / Low / Medium / High
--   Supply-air temperature control across all five steps
--   Current and target temperature in the Climate entity
--   Heating state indication
--   Temperature sensor mapping
--   Rotor, reheater, defrost and alarm states
 -   General stability and Modbus communication
 
-Please report your experience and any issues via GitHub Issues.
+Please report both successful tests and unexpected behaviour via GitHub
+Issues.
 
-  ----------------------------------------------------------------------
+----------------------------------------------------------------------
  ## ✅ Tested units / Compatibility
 
 | Series | Model / Type | Modbus support | Airflow estimation (m³/h) | Tested |
@@ -405,6 +427,15 @@ Special thanks to [**larstobi**](https://github.com/larstobi) for
 contributions and testing of the CD4 support, including register
 information and work on fan control that helped shape the further
 development of the new CD4 implementation.
+
+Special thanks to [**stboee**](https://github.com/stboee) for extensive
+SAVE register research, feature proposals and testing related to heater
+output, ECO, Free Cooling and Auto / Demand Control support.
+
+Special thanks to [**gljo**](https://github.com/gljo) for extensive
+hardware testing of the legacy CD4 implementation, including verification
+of the complete OFF / 12--22 °C temperature mapping on physical
+VSR 500/CD4 hardware.
 
 An AI assistant has been used to support troubleshooting, refactoring,
 and documentation improvements during development.
