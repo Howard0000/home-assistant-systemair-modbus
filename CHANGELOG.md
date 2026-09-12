@@ -5,6 +5,109 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] – 2026-09-12
+
+### Added
+
+* Added SAVE heater / Y1 output support:
+  * Heater analog output percentage
+  * Heater active status
+* Added SAVE ECO controls and diagnostics:
+  * ECO mode enabled
+  * ECO mode active
+  * ECO function active
+  * ECO heat offset
+* Expanded SAVE Free Cooling support and diagnostics:
+  * Clear distinction between enabled and active states
+  * Free Cooling state
+  * Reliable temperature status
+  * Heater block counter
+* Added SAVE Auto / Demand Control diagnostics:
+  * Auto mode source
+  * Demand control enabled
+  * Active demand controller
+  * Supply and extract fan demand values
+* Major expansion of legacy CD4 support:
+  * Native Home Assistant Fan entity
+  * Native Home Assistant Climate entity
+  * Bidirectional supply-air temperature control
+  * Climate Off / Manual summer support
+  * Return from Off to temperature control
+  * Automatic temperature range based on heater configuration:
+    * 12–22 °C with a configured electrical heater
+    * 15–19 °C without a configured electrical heater
+  * Expanded temperature, fan and operating-status sensors
+  * Heat-recovery, reheater, defrost and alarm status
+  * Expanded diagnostic register coverage
+
+### Changed
+
+* Changed the default Modbus polling interval from 10 to 30 seconds to
+  reduce Modbus traffic and potentially improve physical touch-display stability
+* Improved SAVE entity naming and presentation for ECO, Free Cooling,
+  heater output and Demand Control diagnostics
+* Reworked CD4 entity organization for a cleaner Home Assistant device page
+* Moved technical/raw CD4 values to Diagnostics where appropriate
+* Improved Norwegian and English translations for SAVE and CD4 entities
+* CD4 Climate now follows the complete verified temperature mapping instead
+  of the earlier five-step presentation
+* CD4 Climate automatically selects the correct temperature range from the
+  heater configuration reported by the unit
+
+### Fixed
+
+* Fixed duplicate / ambiguous Free Cooling entity naming by clearly
+  separating enabled and active states
+* Improved CD4 Climate handling around Off / Manual summer and return from Off
+* Improved CD4 status decoding and presentation
+* Removed obsolete and duplicate CD4 entity handling
+* Fixed CD4 translation state keys to comply with Home Assistant translation requirements
+
+### Hardware verification
+
+The expanded CD4 implementation has been extensively tested on physical
+Systemair VSR 500/CD4 hardware.
+
+Verified behaviour includes:
+
+* Fan control and relevant fan/sensor values
+* Bidirectional temperature control between Home Assistant and the CD4 controller
+* Climate Off / Manual summer and return to temperature control
+* Heater-dependent temperature ranges:
+  * 12–22 °C with the electrical heater enabled/configured
+  * 15–19 °C without the electrical heater enabled/configured
+* Heat-recovery status reflecting physical operation
+* Electrical reheater status reflecting physical operation
+
+CD4 support remains marked as experimental because legacy units and
+configurations may differ.
+
+### Notes
+
+* The polling interval remains configurable in the integration options;
+  30 seconds is the new default
+* No breaking changes to existing SAVE configurations are intended
+* Feedback from users with other legacy CD4-based units remains very welcome
+
+### Contributors
+
+Special thanks to:
+
+* **@stboee** for extensive SAVE register research, feature proposals and
+  testing across #76, #77, #78 and #79
+* **@gljo (Glen Tore Johansen)** for extensive and highly valuable testing on
+  physical VSR 500/CD4 hardware. His testing was a major contribution to the
+  v1.3.0 CD4 implementation, including verification of bidirectional
+  temperature control, Off / Manual summer, heater-dependent temperature
+  ranges, heat-recovery status, electrical reheater status and fan control
+* **@larstobi** for the original extended CD4 register work in PR #73 and
+  register information that provided an important foundation for the expanded
+  CD4 implementation
+* **@Ztaeyn** for reporting and helping investigate the physical
+  touch-display stability issue in #87
+
+---
+
 ## [1.3.0-beta.3] – 2026-09-05
 
 ### Added
