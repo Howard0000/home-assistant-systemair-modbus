@@ -6,7 +6,7 @@
 
 Dette er en Home Assistant-integrasjon for Systemair
 ventilasjonsaggregater med støtte for både **SAVE** og **eldre
-CD4-systemer (eksperimentell støtte)**. med støtte for **Modbus TCP**.
+CD4-systemer (eksperimentell støtte)** via **Modbus TCP**.
 
 Integrasjonen gir strukturert overvåking og styring av
 ventilasjonsanlegget i Home Assistant, med fokus på **korrekt
@@ -67,7 +67,7 @@ Ved usikkerhet, kontakt kvalifisert fagperson.
 
 ## 🚀 Nylige forbedringer
 
-v1.3.0-beta.3 inneholder betydelige forbedringer for både SAVE og eldre CD4-systemer:
+v1.3.0 inneholder betydelige forbedringer for både SAVE og eldre CD4-systemer:
 
 - Forbedret status og entiteter for SAVE ettervarme / varmeeffekt
 - Forbedret visning og diagnostikk for aktivert / aktiv ECO
@@ -77,7 +77,9 @@ v1.3.0-beta.3 inneholder betydelige forbedringer for både SAVE og eldre CD4-sys
   Modbus-belastningen og potensielt forbedre stabiliteten til det fysiske touchdisplayet
 - Betydelig utvidet støtte for eldre CD4-systemer
 - Native CD4 Fan-entitet med sikker håndtering av manuell viftestopp
-- Oppdatert CD4 Climate-entitet med temperaturstyring fra 12–22 °C i 1 °C-trinn
+- Oppdatert CD4 Climate-entitet med automatisk temperaturområde basert på varmeelementkonfigurasjon
+  - 12–22 °C med konfigurert varmeelement
+  - 15–19 °C uten konfigurert varmeelement
 - Støtte for CD4 Manual summer / temperatur AV
 - Utvidet CD4-diagnostikk og registerstøtte
 
@@ -100,7 +102,7 @@ eksplisitt definert i koden og deler forventet Modbus-registerlayout.
 ### 🧪 CD4 (legacy) – eksperimentell støtte
 
 Støtte for eldre Systemair-aggregater med **CD4-kontroller** er inkludert
-i integrasjonen og har blitt betydelig utvidet i v1.3.0-beta.3.
+i integrasjonen og har blitt betydelig utvidet i v1.3.0.
 
 ⚠️ **Viktig:**
 
@@ -114,7 +116,9 @@ i integrasjonen og har blitt betydelig utvidet i v1.3.0-beta.3.
   - Av / Lav / Medium / Høy
   - Av er bare tilgjengelig dersom aggregatet tillater manuell viftestopp
 - Native Home Assistant **Climate-entitet**
-  - Temperaturstyring fra 12–22 °C i 1 °C-trinn
+  - Temperaturstyring med automatisk valgt område:
+    - 12–22 °C med konfigurert varmeelement
+    - 15–19 °C uten konfigurert varmeelement
   - Av / Manual summer
   - Aktuell tillufttemperatur
   - Viftemodus kan styres direkte fra Climate-entiteten
@@ -135,22 +139,22 @@ viftestopp er tillatt.
 
 ### Testing og tilbakemelding
 
-Hvis du har et CD4-basert aggregat, er tilbakemeldinger svært verdifulle.
+CD4-støtten er omfattende testet på fysisk VSR 500/CD4-hardware før v1.3.0.
 
-Hele mappingen for AV / 12–22 °C er verifisert på fysisk VSR 500/CD4-hardware.
-I denne betaen er det spesielt ønskelig med ytterligere testing av den ferdige
-Climate-styringen fra Home Assistant tilbake til fysisk CD4-kontroller.
+Følgende oppførsel er verifisert på ekte hardware:
 
-Test gjerne, dersom mulig:
+- Toveis temperaturstyring mellom Home Assistant og CD4-kontrolleren
+- Climate Av / Manual summer og retur til temperaturstyring
+- Automatisk temperaturområde basert på varmeelementkonfigurasjon:
+  - 12–22 °C med elektrisk varmeelement aktivert/konfigurert
+  - 15–19 °C uten elektrisk varmeelement aktivert/konfigurert
+- Status for varmegjenvinning som følger fysisk drift på aggregatet
+- Status for elektrisk ettervarme som følger fysisk drift
+- Viftestyring og relevante sensorverdier
 
-- 12 °C
-- 17 °C
-- 20 °C
-- 22 °C
-- Climate Av / Manual summer
-- Retur fra Av til forrige temperatur
-- Viftestyring: Av / Lav / Medium / Høy
-- Generell stabilitet og Modbus-kommunikasjon
+CD4 er fortsatt merket som eksperimentell fordi eldre aggregater og
+konfigurasjoner kan variere. Tilbakemeldinger fra andre CD4-baserte
+anlegg er derfor fortsatt svært velkomne.
 
 Rapporter gjerne både vellykkede tester og uventet oppførsel via GitHub Issues.
 
@@ -187,7 +191,7 @@ Rapporter gjerne både vellykkede tester og uventet oppførsel via GitHub Issues
 > ✅ **VTR 250:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
 > ⚙️ **VTR 350/B:** Rapportert fungerende, men ikke fullt verifisert på alle funksjoner.  
 > ✅ **VSR 300:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
-> ✅ **VSR 500 (CD4 / legacy):** Bekreftet fungerende av bruker – viftestyring, temperaturstyring og sensorverdier testet.
+> ✅ **VSR 500 (CD4 / legacy):** Bekreftet på fysisk hardware – viftestyring, toveis temperaturstyring, Manual summer / Av, dynamiske varmeelementavhengige temperaturområder, varmegjenvinning/ettervarmestatus og sensorverdier testet.
 
 ------------------------------------------------------------------------
 
@@ -434,9 +438,13 @@ Spesiell takk til [**stboee**](https://github.com/stboee) for omfattende
 registerundersøkelser, funksjonsforslag og testing av SAVE-funksjonalitet
 knyttet til ettervarme, ECO, frikjøling og Auto / Demand Control.
 
-Spesiell takk til [**gljo**](https://github.com/gljo) for omfattende
-hardware-testing av den eldre CD4-implementasjonen, inkludert verifisering
-av hele temperaturmappingen AV / 12–22 °C på fysisk VSR 500/CD4.
+Spesiell takk til [**gljo**](https://github.com/gljo) (Glen Tore Johansen)
+for omfattende og svært verdifull testing på fysisk VSR 500/CD4-hardware.
+Testingen hans har vært et viktig bidrag til CD4-implementasjonen i v1.3.0
+og har verifisert toveis temperaturstyring, Manual summer / Av, de
+varmeelementavhengige temperaturområdene 12–22 °C og 15–19 °C,
+varmegjenvinningsstatus, elektrisk ettervarmestatus, viftestyring og
+generell CD4-oppførsel.
 
 En AI-assistent har blitt brukt til støtte i feilsøking, refaktorering
 og dokumentasjonsforbedringer under utviklingen.
