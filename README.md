@@ -6,7 +6,7 @@
 
 This is a Home Assistant integration for Systemair ventilation units
 with support for both **SAVE** and **legacy CD4 (experimental)**
-systems. with support for **Modbus TCP**.
+systems using **Modbus TCP**.
 
 The integration provides structured monitoring and control of the
 ventilation system in Home Assistant, with a focus on **correct airflow,
@@ -68,7 +68,7 @@ If in doubt, consult a qualified technician.
 
 ## 🚀 Recent improvements
 
-v1.3.0-beta.3 includes major improvements for both SAVE and legacy CD4 systems:
+v1.3.0 includes major improvements for both SAVE and legacy CD4 systems:
 
 -   Improved SAVE heater / after-heating status and output entities
 -   Improved ECO enabled / active presentation and diagnostics
@@ -78,7 +78,9 @@ v1.3.0-beta.3 includes major improvements for both SAVE and legacy CD4 systems:
     Modbus load and potentially improve physical touch-display stability
 -   Significantly expanded legacy CD4 support
 -   Native CD4 Fan entity with safe handling of manual fan stop
--   Updated CD4 Climate entity with 12--22 °C control in 1 °C steps
+-   Updated CD4 Climate entity with automatic temperature range based on heater configuration
+    -   12--22 °C with a configured heater
+    -   15--19 °C without a configured heater
 -   CD4 Manual summer / temperature OFF support
 -   Expanded CD4 diagnostic register coverage
 
@@ -101,7 +103,7 @@ layout.
 
 Support for older Systemair units using the **CD4 controller** is
 included in the integration and has been significantly expanded in
-v1.3.0-beta.3.
+v1.3.0.
 
 ⚠️ **Important:**
 
@@ -117,7 +119,9 @@ v1.3.0-beta.3.
     -   Off / Low / Medium / High
     -   Off is only available when manual fan stop is supported by the unit
 -   Native Home Assistant **Climate entity**
-    -   Supply-air temperature control from 12--22 °C in 1 °C steps
+    -   Supply-air temperature control with an automatically selected range:
+        -   12--22 °C with a configured heater
+        -   15--19 °C without a configured heater
     -   Off / Manual summer mode
     -   Current supply-air temperature
     -   Fan mode control directly from the Climate entity
@@ -140,23 +144,23 @@ supported.
 
 ### Testing and feedback
 
-If you have a CD4-based unit, your feedback is extremely valuable.
+Legacy CD4 support has been tested extensively on physical VSR 500/CD4
+hardware for v1.3.0.
 
-The complete OFF / 12--22 °C temperature mapping has been verified on
-physical VSR 500/CD4 hardware. Additional testing of the finished Home
-Assistant Climate control writing back to physical CD4 controllers is
-especially useful in this beta.
+The following behaviour has been verified on real hardware:
 
-Please test, where possible:
+-   Bidirectional temperature control between Home Assistant and the CD4 controller
+-   Climate Off / Manual summer mode and return to temperature control
+-   Automatic temperature range based on heater configuration:
+    -   12--22 °C with the electrical heater enabled/configured
+    -   15--19 °C without the electrical heater enabled/configured
+-   Heat-recovery status reflecting physical operation of the unit
+-   Electrical reheater status reflecting physical operation
+-   Fan control and relevant sensor values
 
--   12 °C
--   17 °C
--   20 °C
--   22 °C
--   Climate Off / Manual summer
--   Returning from Off to the previous temperature
--   Fan control: Off / Low / Medium / High
--   General stability and Modbus communication
+CD4 remains marked as experimental because legacy units and configurations
+may differ. Additional reports from other CD4-based systems are therefore
+still very welcome.
 
 Please report both successful tests and unexpected behaviour via GitHub
 Issues.
@@ -193,7 +197,7 @@ Issues.
 > ✅ **VTR 250:** Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
 > ⚙️ **VTR 350/B:** Reported working, but not yet fully verified across all features.  
 > ✅ **VSR 300:** Confirmed working by a community user (tested with Elfin EW11 Modbus TCP gateway).  
-> ✅ **VSR 500 (CD4 / legacy):** Confirmed working by a community user – fan control, temperature control and sensor values tested.
+> ✅ **VSR 500 (CD4 / legacy):** Confirmed on physical hardware – fan control, bidirectional temperature control, Manual summer / Off, dynamic heater-dependent temperature ranges, heat-recovery/reheater status and sensor values tested.
 
 ------------------------------------------------------------------------
 
@@ -432,10 +436,12 @@ Special thanks to [**stboee**](https://github.com/stboee) for extensive
 SAVE register research, feature proposals and testing related to heater
 output, ECO, Free Cooling and Auto / Demand Control support.
 
-Special thanks to [**gljo**](https://github.com/gljo) for extensive
-hardware testing of the legacy CD4 implementation, including verification
-of the complete OFF / 12--22 °C temperature mapping on physical
-VSR 500/CD4 hardware.
+Special thanks to [**gljo**](https://github.com/gljo) (Glen Tore Johansen)
+for extensive and highly valuable testing on physical VSR 500/CD4 hardware.
+His testing was a major contribution to the v1.3.0 CD4 implementation and
+verified bidirectional temperature control, Manual summer / Off behaviour,
+heater-dependent 12--22 °C and 15--19 °C temperature ranges, heat-recovery
+status, electrical reheater status, fan control and general CD4 behaviour.
 
 An AI assistant has been used to support troubleshooting, refactoring,
 and documentation improvements during development.
