@@ -176,6 +176,9 @@
       },
       "temperature_setting_step": {
         "name": "Temperature setting step"
+      },
+      "heater_type": {
+        "name": "Heater type"
       }
     }
   }
