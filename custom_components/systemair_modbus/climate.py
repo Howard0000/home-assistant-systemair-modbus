@@ -61,9 +61,11 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
     # REG_FAN_ALLOW_MANUAL_FAN_STOP.
     _attr_hvac_modes = [HVACMode.FAN_ONLY, HVACMode.OFF]
 
-    # Verified against the CD4 simulator and real VSR500/CD4 register mapping.
-    _attr_min_temp = 12.0
-    _attr_max_temp = 22.0
+    # Both maps below are verified on real VSR500/CD4 hardware:
+    #   heater configured:     level 1..11 = 12..22 °C
+    #   no heater configured:  level 1..5  = 15..19 °C
+    # REG_HC_HEATER_TYPE is used as the profile selector. If it is unavailable,
+    # use the heater-capable 12..22 °C profile as a conservative fallback.
     _attr_target_temperature_step = 1.0
 
     def __init__(self, entry: ConfigEntry, coordinator, client, model) -> None:
@@ -74,7 +76,7 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
 
         # Keep the last valid target available while REG_HC_TEMP_LVL is 0
         # (Manual summer / temperature regulation off), so Home Assistant can
-        # return directly to a valid 12..22 °C setpoint.
+        # return directly to a valid setpoint for the active CD4 profile.
         self._last_target_temperature = 20.0
 
         # Fan-mode OFF is separate from temperature OFF and is only exposed
@@ -108,6 +110,47 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
         except (TypeError, ValueError):
             return False
 
+    def _heater_configured(self) -> bool:
+        """Return True when CD4 reports a configured heater.
+
+        REG_HC_HEATER_TYPE:
+          0 = no heater
+          1 = water heater
+          2 = electrical heater
+          3 = other
+
+        If the value is unavailable, assume the heater-capable 12..22 °C
+        profile as a conservative fallback.
+        """
+        raw = self._get_int("heater_type")
+        if raw is None:
+            return True
+        return raw != 0
+
+    @property
+    def min_temp(self) -> float:
+        return 12.0 if self._heater_configured() else 15.0
+
+    @property
+    def max_temp(self) -> float:
+        return 22.0 if self._heater_configured() else 19.0
+
+    def _temperature_to_level(self, temperature: float) -> int | None:
+        """Map a user temperature to REG_HC_TEMP_LVL."""
+        rounded = round(temperature)
+        if abs(temperature - rounded) > 0.01:
+            return None
+
+        value = int(rounded)
+        if self._heater_configured():
+            if 12 <= value <= 22:
+                return value - 11
+            return None
+
+        if 15 <= value <= 19:
+            return value - 14
+        return None
+
     @property
     def hvac_mode(self) -> HVACMode:
         # Temperature command 0 is Systemair Manual summer / panel "OFF".
@@ -130,10 +173,13 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
             # Leaving Manual summer mode requires a valid 1..11 temperature
             # command. Restore the last valid target known by this entity.
             target = min(
-                max(float(self._last_target_temperature), self._attr_min_temp),
-                self._attr_max_temp,
+                max(float(self._last_target_temperature), self.min_temp),
+                self.max_temp,
             )
-            level = int(round(target)) - 11
+            level = self._temperature_to_level(target)
+            if level is None:
+                return
+            self._last_target_temperature = float(round(target))
             await self._client.write_register(
                 self._model.ADDR_TEMPERATURE_LEVEL_COMMAND,
                 level,
@@ -174,9 +220,9 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
         # reported by the controller.
         if (
             level is not None
-            and 1 <= level <= 11
+            and 1 <= level <= (11 if self._heater_configured() else 5)
             and setpoint is not None
-            and self._attr_min_temp <= setpoint <= self._attr_max_temp
+            and self.min_temp <= setpoint <= self.max_temp
         ):
             self._last_target_temperature = setpoint
             return setpoint
@@ -184,7 +230,7 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
         # REG_HC_TEMP_LVL = 0 is CD4 manual summer mode. The controller then
         # reports REG_HC_TEMP_SP = 0, but returning None here makes Home
         # Assistant hide the temperature control. Keep showing the last valid
-        # target instead, so selecting 12..22 °C can leave manual summer mode.
+        # target instead, so selecting a valid temperature can leave manual summer mode.
         if level == 0:
             return self._last_target_temperature
 
@@ -238,18 +284,11 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
         except (TypeError, ValueError):
             return
 
-        # This working CD4 model supports 12..22 °C in exact 1 °C steps.
-        if requested < 12.0 or requested > 22.0:
+        selected_level = self._temperature_to_level(requested)
+        if selected_level is None:
             return
 
         rounded = round(requested)
-        if abs(requested - rounded) > 0.01:
-            return
-
-        # 12 °C -> level 1
-        # 20 °C -> level 9
-        # 22 °C -> level 11
-        selected_level = int(rounded) - 11
         self._last_target_temperature = float(rounded)
 
         await self._client.write_register(

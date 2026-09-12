@@ -47,8 +47,10 @@ class Cd4Model:
     # --- Supply-air temperature control (CD4) ---
     # D24810 A007 documents REG_HC_TEMP_LVL as the R/W temperature
     # set-point level (0 = manual summer mode, 1..5 legacy levels,
-    # 6..29 extended levels). Real VSR500/CD4 testing confirms that the
-    # user-facing range is 12..22 °C as levels 1..11.
+    # 6..29 extended levels). Real VSR500/CD4 testing confirms two
+    # user-facing profiles selected by REG_HC_HEATER_TYPE:
+    #   heater configured:    12..22 °C as levels 1..11
+    #   no heater configured: 15..19 °C as levels 1..5
     #
     # Register list:
     #   REG_HC_TEMP_LVL   PDF 207 -> Modbus offset 206, R/W command
@@ -194,6 +196,19 @@ class Cd4Model:
         RegisterDef(
             key="fan_manual_stop_allowed_register",
             address=r(113),
+            input_type="holding",
+            data_type="uint16",
+        ),
+
+        # ---------------------------------------------------------------------
+        # Heater configuration
+        # Systemair docs register 201 -> Modbus offset 200
+        # 0 = no heater, 1 = water heater, 2 = electrical heater, 3 = other.
+        # Used by the CD4 Climate entity to choose the correct temperature map.
+        # ---------------------------------------------------------------------
+        RegisterDef(
+            key="heater_type",
+            address=r(200),
             input_type="holding",
             data_type="uint16",
         ),

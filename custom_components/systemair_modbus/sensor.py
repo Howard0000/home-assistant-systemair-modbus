@@ -179,6 +179,7 @@ CD4_TRANSLATED_SENSOR_KEYS: set[str] = {
     "saf_pwm",
     "eaf_pwm",
     "fan_speed_level_cd",
+    "heater_type",
     "temperature_level_command_register",
     "temperature_setpoint",
     "temperature_level_1",
