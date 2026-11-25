@@ -167,7 +167,26 @@
         }
       },
       "system_type": {
-        "name": "Systemtype"
+        "name": "Systemtype",
+        "state": {
+          "vr400": "VR400",
+          "vr700": "VR700",
+          "vr700dk": "VR700DK",
+          "vr400de": "VR400DE",
+          "vtc300": "VTC300",
+          "vtc700": "VTC700",
+          "vtr150k": "VTR150K",
+          "vtr200b": "VTR200B",
+          "vsr300": "VSR300",
+          "vsr500": "VSR500",
+          "vsr150": "VSR150",
+          "vtr300": "VTR300",
+          "vtr500": "VTR500",
+          "vsr300de": "VSR300DE",
+          "vtc200": "VTC200",
+          "vtc100": "VTC100",
+          "unknown": "Ukjent"
+        }
       },
       "filter_replacement_period": {
         "name": "Filterintervall (måneder)"
@@ -249,7 +268,14 @@
         "name": "Temperaturregulering – trinnstørrelse"
       },
       "heater_type": {
-        "name": "Varmeelementtype"
+        "name": "Varmeelementtype",
+        "state": {
+          "no_heater": "Ingen varmeelement",
+          "water_heater": "Vannbåren varme",
+          "electrical_heater": "Elektrisk varmeelement",
+          "contactor": "Kontaktor",
+          "unknown": "Ukjent"
+        }
       }
     },
     "switch": {
@@ -332,6 +358,9 @@
       },
       "crowded_mode_duration": {
         "name": "Party – varighet"
+      },
+      "fireplace_mode_duration": {
+        "name": "Peis – varighet"
       },
       "refresh_mode_duration": {
         "name": "Oppfriskning – varighet"
@@ -505,10 +534,41 @@
           "scan_interval": "Oppdateringsintervall (sekunder)",
           "unit_model": "Aggregatmodell (for estimert luftmengde)"
         }
+      },
+      "connection": {
+        "title": "Systemair Modbus",
+        "description": "Velg tilkoblingstype.",
+        "data": {
+          "connection_type": "Tilkoblingstype"
+        }
+      },
+      "tcp": {
+        "title": "Systemair Modbus",
+        "description": "Konfigurer Modbus TCP/IP.",
+        "data": {
+          "model": "Modell",
+          "gateway_profile": "Kommunikasjonsprofil",
+          "host": "IP-adresse / vertsnavn",
+          "port": "Port",
+          "slave": "Slave-ID",
+          "scan_interval": "Oppdateringsintervall (sekunder)"
+        }
+      },
+      "aux2": {
+        "title": "Systemair Modbus",
+        "description": "Konfigurer seriell Modbus RTU.",
+        "data": {
+          "model": "Modell",
+          "serial_device": "Seriell enhet",
+          "baudrate": "Overføringshastighet (baud)",
+          "parity": "Paritet",
+          "stopbits": "Stoppbiter",
+          "slave": "Slave-ID"
+        }
       }
     },
     "error": {
-      "cannot_connect": "Kunne ikke koble til. Sjekk host/port/slave og at Modbus TCP er aktivert.",
+      "cannot_connect": "Kunne ikke koble til. Kontroller tilkoblingsinnstillingene og Modbus-adressen.",
       "unknown": "Uventet feil."
     },
     "abort": {
@@ -520,8 +580,29 @@
       "init": {
         "title": "Alternativer",
         "data": {
-          "scan_interval": "Oppdateringsintervall (sekunder)"
+          "scan_interval": "Oppdateringsintervall (sekunder)",
+          "restore_legacy_save_ids": "Gjenopprett gamle SAVE-entitets-ID-er (engangsoperasjon, krever sikkerhetskopi)",
+          "slave": "Slave-ID",
+          "gateway_profile": "Kommunikasjonsprofil"
         }
+      }
+    },
+    "error": {
+      "migration_conflict": "Kan ikke gjenopprette ID-er: en ID er opptatt eller ingen aktuelle entiteter ble funnet. Se loggen.",
+      "migration_not_save": "Denne funksjonen støtter kun SAVE."
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "tcp": "Modbus TCP/IP (nettverk)",
+        "aux2": "Modbus RTU (seriell)"
+      }
+    },
+    "gateway_profile": {
+      "options": {
+        "generic": "Standard kommunikasjon",
+        "save_connect": "Forsiktig kommunikasjon (begrenset belastning)"
       }
     }
   }
