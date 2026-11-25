@@ -222,6 +222,30 @@ CD4_INTERNAL_SENSOR_KEYS: set[str] = {
 
 # Language-neutral enum state keys. Translation is handled by en/nb JSON.
 CD4_ENUM_VALUE_MAPS: dict[str, dict[int, str]] = {
+    "system_type": {
+        0: "vr400",
+        1: "vr700",
+        2: "vr700dk",
+        3: "vr400de",
+        4: "vtc300",
+        5: "vtc700",
+        12: "vtr150k",
+        13: "vtr200b",
+        14: "vsr300",
+        15: "vsr500",
+        16: "vsr150",
+        17: "vtr300",
+        18: "vtr500",
+        19: "vsr300de",
+        20: "vtc200",
+        21: "vtc100",
+    },
+    "heater_type": {
+        0: "no_heater",
+        1: "water_heater",
+        2: "electrical_heater",
+        3: "contactor",
+    },
     "fan_speed_level_cd": {
         0: "stop",
         1: "low",
@@ -298,6 +322,28 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
 
+    if data.get("transport") == "aux2":
+        # Retain the three existing unique IDs so upgrades preserve HA history.
+        # Internal data keys are now transport-neutral.
+        entities.extend(SerialDiagnosticSensor(coordinator, entry, key, name, unit, data_key)
+                        for key, name, unit, data_key in (
+                            ("aux2_registers_ok", "Modbus RTU – registre med verdier", None, "serial_registers_ok"),
+                            ("aux2_registers_failed", "Modbus RTU – registre feilet", None, "serial_registers_failed"),
+                            ("aux2_sweep_seconds", "Modbus RTU – gjennomgangstid", "s", "serial_sweep_seconds"),
+                        ))
+        # Remove only the four diagnostics intentionally retired in this release.
+        from homeassistant.helpers import entity_registry as er
+        registry = er.async_get(hass)
+        for obsolete_key in (
+            "aux2_registers_total", "aux2_registers_attempted",
+            "aux2_sweep_percent", "aux2_requests_per_sweep",
+        ):
+            entity_id = registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{entry.entry_id}_{obsolete_key}"
+            )
+            if entity_id:
+                registry.async_remove(entity_id)
+
     # Raw register-backed sensors (from model.REGISTERS).
     for reg in model.REGISTERS:
         # CD4: do not create duplicate numeric sensors for values represented
@@ -330,6 +376,9 @@ async def async_setup_entry(
                 d.get("unit"),
             )
         )
+
+    # SAVE model identification is available for TCP and AUX-2.
+    entities.append(SystemairSaveSystemTypeSensor(coordinator, entry))
 
     entities.append(SystemairCalculatedExhaustTemperature(coordinator, entry))
     async_add_entities(entities)
@@ -428,6 +477,24 @@ class SystemairDerivedSensor(SystemairBaseEntity, SensorEntity):
         return self.coordinator.data.get(self._key)
 
 
+class SystemairSaveSystemTypeSensor(SystemairBaseEntity, SensorEntity):
+    """Diagnostic sensor for the SAVE model text read at startup."""
+
+    _attr_name = "Systemtype"
+    _attr_icon = "mdi:information-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = True
+
+    def __init__(self, coordinator, entry: ConfigEntry) -> None:
+        super().__init__(entry, coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_derived_system_type"
+        self._attr_suggested_object_id = "system_type"
+
+    @property
+    def native_value(self):
+        return (self.coordinator.data or {}).get("system_type")
+
+
 class SystemairCalculatedExhaustTemperature(SystemairBaseEntity, SensorEntity):
     """Calculated exhaust/avkast air temperature (estimated).
 
@@ -461,3 +528,20 @@ class SystemairCalculatedExhaustTemperature(SystemairBaseEntity, SensorEntity):
             return round(value, 1)
         except (TypeError, ValueError):
             return None
+
+class SerialDiagnosticSensor(SystemairBaseEntity, SensorEntity):
+    """Expose selected Modbus RTU diagnostics."""
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:progress-check"
+
+    def __init__(self, coordinator, entry, key, name, unit, data_key):
+        super().__init__(entry, coordinator)
+        self._key = data_key
+        self._attr_name = name
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
+        if unit:
+            self._attr_native_unit_of_measurement = unit
+
+    @property
+    def native_value(self):
+        return (self.coordinator.data or {}).get(self._key)

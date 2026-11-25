@@ -12,10 +12,41 @@
           "scan_interval": "Scan interval (seconds)",
           "unit_model": "Unit model (for estimated air flow)"
         }
+      },
+      "connection": {
+        "title": "Systemair Modbus",
+        "description": "Choose the connection type.",
+        "data": {
+          "connection_type": "Connection type"
+        }
+      },
+      "tcp": {
+        "title": "Systemair Modbus",
+        "description": "Configure Modbus TCP/IP.",
+        "data": {
+          "model": "Model",
+          "gateway_profile": "Communication profile",
+          "host": "IP address / hostname",
+          "port": "Port",
+          "slave": "Slave ID",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      },
+      "aux2": {
+        "title": "Systemair Modbus",
+        "description": "Configure serial Modbus RTU.",
+        "data": {
+          "model": "Model",
+          "serial_device": "Serial device",
+          "baudrate": "Baud rate",
+          "parity": "Parity",
+          "stopbits": "Stop bits",
+          "slave": "Slave ID"
+        }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect. Check host/port/slave and that Modbus TCP is enabled.",
+      "cannot_connect": "Failed to connect. Check the connection settings and Modbus address.",
       "unknown": "Unexpected error."
     },
     "abort": {
@@ -27,9 +58,16 @@
       "init": {
         "title": "Options",
         "data": {
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "restore_legacy_save_ids": "Restore legacy SAVE entity IDs (one-time, backup required)",
+          "slave": "Slave ID",
+          "gateway_profile": "Communication profile"
         }
       }
+    },
+    "error": {
+      "migration_conflict": "Cannot restore IDs: target in use or no eligible entities. Check logs.",
+      "migration_not_save": "This operation is only supported for SAVE."
     }
   },
   "entity": {
@@ -178,7 +216,50 @@
         "name": "Temperature setting step"
       },
       "heater_type": {
-        "name": "Heater type"
+        "name": "Heater type",
+        "state": {
+          "no_heater": "No heater",
+          "water_heater": "Water heater",
+          "electrical_heater": "Electrical heater",
+          "contactor": "Contactor",
+          "unknown": "Unknown"
+        }
+      },
+      "system_type": {
+        "name": "System type",
+        "state": {
+          "vr400": "VR400",
+          "vr700": "VR700",
+          "vr700dk": "VR700DK",
+          "vr400de": "VR400DE",
+          "vtc300": "VTC300",
+          "vtc700": "VTC700",
+          "vtr150k": "VTR150K",
+          "vtr200b": "VTR200B",
+          "vsr300": "VSR300",
+          "vsr500": "VSR500",
+          "vsr150": "VSR150",
+          "vtr300": "VTR300",
+          "vtr500": "VTR500",
+          "vsr300de": "VSR300DE",
+          "vtc200": "VTC200",
+          "vtc100": "VTC100",
+          "unknown": "Unknown"
+        }
+      }
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "tcp": "Modbus TCP/IP (network)",
+        "aux2": "Modbus RTU (serial)"
+      }
+    },
+    "gateway_profile": {
+      "options": {
+        "generic": "Standard communication",
+        "save_connect": "Cautious communication (limited load)"
       }
     }
   }

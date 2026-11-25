@@ -19,5 +19,17 @@ class SystemairBaseEntity(CoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Systemair",
-            name=entry.title,
+            name=coordinator.model.device_model_name(
+                (coordinator.data or {}).get("system_type")
+            ),
         )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Expose the detected CD4 or SAVE system type as device model."""
+        info = dict(self._attr_device_info)
+        model = self.coordinator.model
+        if getattr(model, "model_id", None) in ("legacy_cd4", "save"):
+            data = self.coordinator.data or {}
+            info["model"] = model.device_model_name(data.get("system_type"))
+        return DeviceInfo(**info)
