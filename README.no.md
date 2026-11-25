@@ -1,21 +1,16 @@
-# 🌬️ Systemair Modbus v2.0.0 — Én integrasjon. To protokoller. 🚀
+# Home Assistant -- Systemair Modbus (SAVE + CD4)
 
 **Norsk** · [Read in English](README.md)
 
-[![HACS](https://img.shields.io/badge/HACS-Default-green.svg)](https://hacs.xyz/) ![Versjon](https://img.shields.io/badge/Versjon-2.0.0-blue) ![Modbus TCP](https://img.shields.io/badge/Modbus-TCP%2FIP-0A7EA4) ![Modbus RTU](https://img.shields.io/badge/Modbus-RTU-0A7EA4)
+[![HACS](https://img.shields.io/badge/HACS-Default-green.svg)](https://hacs.xyz/)
 
-### 🎉 En milepæl for Systemair Modbus
+Dette er en Home Assistant-integrasjon for Systemair
+ventilasjonsaggregater med støtte for både **SAVE** og **eldre
+CD4-systemer (eksperimentell støtte)** via **Modbus TCP**.
 
-**Modbus TCP/IP + Modbus RTU — samlet i én Home Assistant-integrasjon.**
-
-Versjon **2.0.0** utvider integrasjonen med seriell Modbus RTU-kommunikasjon i tillegg til eksisterende TCP/IP, samtidig som støtten for **Systemair SAVE** og **eldre CD4-kontrollere (eksperimentell støtte)** videreføres.
-
-- 🌐 **Modbus TCP/IP:** Tilkobling via Ethernet-/Wi-Fi-gateway, for eksempel Elfin EW11 eller en kompatibel Systemair-gateway.
-- 🔌 **Modbus RTU:** Tilkobling via ESPHome-seriegrensesnitt, inkludert Home Assistant Connect AUX-2 med USB–RS485-adapter og ESP32-baserte RS485-enheter med kompatibel ESPHome seriell proxy.
-- 🏠 **Én integrasjon:** De samme kjente Home Assistant-entitetene og styringsmulighetene, der aggregatet støtter funksjonene.
-- 🛠️ **Bedre dokumentasjon:** Egne veiledninger for [TCP/IP](docs/modbus-tcp.no.md) og [RTU](docs/modbus-rtu.no.md).
-
-Integrasjonen gir overvåking og styring av Systemair ventilasjonsaggregater med vekt på stabil kommunikasjon, energieffektiv drift og forutsigbare entiteter. Funksjoner varierer mellom modeller og konfigurasjoner; se kompatibilitetstabellen nedenfor for fysisk verifiserte tilkoblinger.
+Integrasjonen gir strukturert overvåking og styring av
+ventilasjonsanlegget i Home Assistant, med fokus på **korrekt
+luftmengde, energieffektiv drift, og stabil håndtering av entiteter**.
 
 ⚠️ **Merk:**\
 Dette er et **uoffisielt community-prosjekt** og er **ikke utviklet,
@@ -61,8 +56,6 @@ Ved usikkerhet, kontakt kvalifisert fagperson.
 -   Skrivebart tilluft-temperatursetpunkt
 -   Beregnet avkasttemperatur (utledet fra systemverdier)
 
--   Justerbar varighet for peismodus (SAVE, 1–60 minutter)
-
 ### Brukeropplevelse
 
 -   Norsk og engelsk språkstøtte (følger Home Assistant-språk)
@@ -72,15 +65,7 @@ Ved usikkerhet, kontakt kvalifisert fagperson.
 
 ------------------------------------------------------------------------
 
-## Nytt i v2.0.0
-
-- Automatisk modellidentifikasjon for SAVE og CD4, med modellnavn i enhetsinformasjonen når tilgjengelig.
-- Lesbar varmetype for CD4.
-- Justerbar varighet for peismodus (SAVE, 1–60 minutter).
-- Eco-varmeoffset (SAVE): 0–10 °C der registeret støttes.
-- Slave-ID 1–247 for TCP og RTU; standardverdi 1.
-
-## 🚀 Tidligere forbedringer (v1.3.0)
+## 🚀 Nylige forbedringer
 
 v1.3.0 inneholder betydelige forbedringer for både SAVE og eldre CD4-systemer:
 
@@ -103,9 +88,16 @@ stabilitet og transparent entitetsoppførsel.
 
 ---
 
-## 📋 Støttede modeller og teststatus
+## 📋 Systemair SAVE – støttede modeller
 
-Se kompatibilitetstabellen nedenfor for SAVE- og CD4-modeller, TCP/IP, RTU og luftmengde-estimat.
+**Luftmengde-estimat (m³/h)** er kun tilgjengelig for modeller som er
+eksplisitt definert i koden og deler forventet Modbus-registerlayout.
+
+**Forklaring:** - ✅ = Ja / tilgjengelig\
+- ⚙️ = Støttet, men ikke testet\
+- ❌ = Ikke tilgjengelig
+
+------------------------------------------------------------------------
 
 ### 🧪 CD4 (legacy) – eksperimentell støtte
 
@@ -170,54 +162,38 @@ Rapporter gjerne både vellykkede tester og uventet oppførsel via GitHub Issues
 
 ## ✅ Testede aggregater / kompatibilitet
 
-**✅ = fysisk testet tilkobling. — = ikke bekreftet fysisk testet (betyr ikke at tilkoblingen ikke støttes).**
+| Serie | Modell / Type | Modbus-støtte | Luftmengde-estimat (m³/h) | Testet |
+|---|---|:---:|:---:|:---:|
+| VSR | VSR 150/B | ✅ | ✅ | ❌ |
+| VSR | VSR 200/B | ✅ | ✅ | ❌ |
+| VSR | VSR 300 | ✅ | ✅ | ✅ |
+| VSR | VSR 400 | ✅ | ✅ | ❌ |
+| VSR | VSR 500 | ✅ | ✅ | ✅ |
+| VSR | VSR 700 | ✅ | ✅ | ❌ |
+| VTR | VTR 100/B | ✅ | ✅ | ❌ |
+| VTR | VTR 150/B | ✅ | ✅ | ❌ |
+| VTR | VTR 250/B | ✅ | ✅ | ✅ |
+| VTR | VTR 275/B | ✅ | ✅ | ❌ |
+| VTR | VTR 300 | ✅ | ✅ | ✅ |
+| VTR | VTR 350/B | ✅ | ✅ | ⚙️ |
+| VTR | VTR 500 | ✅ | ✅ | ✅ |
+| VTR | VTR 700 | ✅ | ✅ | ❌ |
+| VTC | VTC 200-1 | ✅ | ❌ | ❌ |
+| VTC | VTC 300 | ✅ | ❌ | ❌ |
+| VTC | VTC 500 | ✅ | ❌ | ❌ |
+| VTC | VTC 700 | ✅ | ❌ | ❌ |
+| VSC | VSC 100 | ✅ | ❌ | ❌ |
+| VSC | VSC 200 | ✅ | ❌ | ❌ |
+| VSC | VSC 300 | ✅ | ❌ | ❌ |
 
-**Luftmengde-estimat** betyr at modellen har en modellspesifikk beregning i integrasjonen. Det betyr ikke at beregningen er verifisert mot målte luftmengder. Spesielt er maksimumsverdien for VTR 300 SAVE ikke uavhengig verifisert. CD4 har ikke denne beregningen.
+> ✅ **VTR 300:** Bekreftet fungerende av bruker (SAVE Touch, original Systemair Modbus-gateway, Modbus TCP).  
+> ✅ **VTR 500:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
+> ✅ **VTR 250:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
+> ⚙️ **VTR 350/B:** Rapportert fungerende, men ikke fullt verifisert på alle funksjoner.  
+> ✅ **VSR 300:** Bekreftet fungerende av bruker (testet med Elfin EW11 Modbus TCP-gateway).  
+> ✅ **VSR 500 (CD4 / legacy):** Bekreftet på fysisk hardware – viftestyring, toveis temperaturstyring, Manual summer / Av, dynamiske varmeelementavhengige temperaturområder, varmegjenvinning/ettervarmestatus og sensorverdier testet.
 
-| Serie | Modell / type | Kontroller | TCP/IP testet | RTU testet | Luftmengde-estimat (m³/h) |
-|---|---|---|:---:|:---:|:---:|
-| VSR | VSR 150 | CD4 | — | — | ❌ |
-| VSR | VSR 150/B | SAVE | — | — | ✅ |
-| VSR | VSR 200/B | SAVE | — | — | ✅ |
-| VSR | VSR 300 | SAVE | ✅ | — | ✅ |
-| VSR | VSR 300 | CD4 | — | — | ❌ |
-| VSR | VSR 300DE | CD4 | — | — | ❌ |
-| VSR | VSR 400 | SAVE | — | — | ✅ |
-| VSR | VSR 500 | SAVE | — | — | ✅ |
-| VSR | VSR 500 | CD4 | ✅ | — | ❌ |
-| VSR | VSR 700 | SAVE | — | — | ✅ |
-| VTR | VTR 100/B | SAVE | — | — | ✅ |
-| VTR | VTR 150K | SAVE | — | — | ✅ |
-| VTR | VTR 150K | CD4 | ✅ | — | ❌ |
-| VTR | VTR 150/B | SAVE | — | — | ✅ |
-| VTR | VTR 200B | CD4 | — | — | ❌ |
-| VTR | VTR 250/B | SAVE | ✅ | — | ✅ |
-| VTR | VTR 275/B | SAVE | — | — | ✅ |
-| VTR | VTR 300 | SAVE | ✅ | — | ✅ |
-| VTR | VTR 300 | CD4 | — | — | ❌ |
-| VTR | VTR 350/B | SAVE | ✅ | — | ✅ |
-| VTR | VTR 500 | SAVE | ✅ | ✅ | ✅ |
-| VTR | VTR 500 | CD4 | — | — | ❌ |
-| VTR | VTR 700 | SAVE | — | — | ✅ |
-| VTC | VTC 100 | CD4 | — | — | ❌ |
-| VTC | VTC 200 | CD4 | — | — | ❌ |
-| VTC | VTC 200-1 | SAVE | — | — | ✅ |
-| VTC | VTC 300 | SAVE | — | — | ✅ |
-| VTC | VTC 300 | CD4 | — | — | ❌ |
-| VTC | VTC 500 | SAVE | — | — | ✅ |
-| VTC | VTC 700 | SAVE | — | — | ✅ |
-| VTC | VTC 700 | CD4 | — | — | ❌ |
-| VSC | VSC 100 | SAVE | — | — | ✅ |
-| VSC | VSC 200 | SAVE | — | — | ✅ |
-| VSC | VSC 300 | SAVE | — | — | ✅ |
-| VR | VR 400 | CD4 | — | — | ❌ |
-| VR | VR 700 | CD4 | ✅ | — | ❌ |
-| VR | VR 700DK | CD4 | — | — | ❌ |
-| VR | VR 400DE | CD4 | — | — | ❌ |
-
-**Bekreftet i tidligere dokumentasjon:** VSR 300, VTR 250/B, VTR 300 og VTR 500 (SAVE) via TCP/IP, samt VSR 500 (CD4) og VTR 150K (CD4) via TCP/IP. VTR 350/B er rapportert fungerende, men ikke fullstendig funksjonstestet. VTR 500 SAVE er testet med lesing og skriving via RTU med både AUX-2 og ESP32-C6.
-
----
+------------------------------------------------------------------------
 
 ## 🏗️ Forutsetninger -- valg av aggregat og luftmengde
 
@@ -253,44 +229,48 @@ Home Assistant ved bruk av entiteter fra denne integrasjonen.
 
 ### Krav
 
-- Home Assistant **2024.6** eller nyere (kravet i tidligere README; kontroller mot aktuell release)
-- Et Systemair SAVE- eller CD4-aggregat med kompatibel Modbus-tilgang
-- HACS for anbefalt installasjonsmetode
-- En kompatibel TCP/IP-gateway eller RTU-serieforbindelse
+-   Home Assistant **2024.6** eller nyere
+-   Systemair SAVE aggregat med Modbus-tilgang
+-   Modbus TCP
+    -   Innebygd i aggregatet **eller**
+    -   Via en ekstern gateway (f.eks. Elfin EW11)
+-   HACS (Home Assistant Community Store)
 
-### Installer integrasjonen
+------------------------------------------------------------------------
 
-1. Åpne **HACS → Integrations**.
-2. Søk etter **Systemair Modbus** og velg **Download**. Dersom integrasjonen ikke er tilgjengelig i HACS-søket, kan repositoryet legges til som **Custom repository** av typen **Integration**.
-3. Start Home Assistant på nytt.
-4. Gå til **Innstillinger → Enheter og tjenester → Legg til integrasjon → Systemair Modbus**.
-5. Velg **Modbus TCP/IP (nettverk)** eller **Modbus RTU (seriell)**.
-6. Følg veiledningen for valgt tilkoblingstype nedenfor.
+### Metode 1: Installer via HACS (anbefalt)
 
-### 🔌 Tilkoblingsveiledninger
+1.  Åpne **HACS**
+2.  Gå til **Integrations**
+3.  Søk etter **Systemair Modbus**
+4.  Klikk **Download**
+5.  Restart Home Assistant
+6.  Gå til **Settings → Devices & Services → Add integration**
+7.  Velg **Systemair Modbus** og skriv inn:
+    -   IP-adresse
+    -   Port (vanligvis `502`)
+    -   Modbus slave ID
 
-| Tilkobling | Veiledning | Eksempel på utstyr |
-|---|---|---|
-| Modbus TCP/IP | **[TCP/IP – norsk](docs/modbus-tcp.no.md)** · [English](docs/modbus-tcp.md) | Elfin EW11, Systemair SAVE Connect |
-| Modbus RTU | **[RTU – norsk](docs/modbus-rtu.no.md)** · [English](docs/modbus-rtu.md) | Home Assistant Connect AUX-2 med USB–RS485-adapter |
+------------------------------------------------------------------------
 
-Begge veiledningene dekker fysisk tilkobling, konfigurering i Home Assistant og feilsøking. **AUX-2 krever en ekstern USB–RS485-adapter i AUX-2 sin USB-port** for tilkobling til RS485 A/B på aggregatet.
+### Metode 2: Installer som et custom repository (manuelt)
 
----
+> Denne metoden er hovedsakelig ment for utvikling, testing eller tidlig
+> tilgang til endringer.
 
-## 🔄 Oppgradering fra tidligere versjoner
+1.  Åpne **HACS**
+2.  Gå til **Integrations**
+3.  Åpne menyen (tre prikker) → **Custom repositories**
+4.  Legg til dette repositoryet som en **Integration**
+5.  Installer **Systemair Modbus**
+6.  Restart Home Assistant
+7.  Gå til **Settings → Devices & Services → Add integration**
+8.  Velg **Systemair Modbus** og skriv inn:
+    -   IP-adresse
+    -   Port (vanligvis `502`)
+    -   Modbus slave ID
 
-### Gjenopprett gamle SAVE-entitets-ID-er
-
-Under **Innstillinger → Enheter og tjenester → Systemair Modbus → Konfigurer (Alternativer)** finnes valget **«Gjenopprett gamle SAVE-entitets-ID-er (engangsoperasjon, krever sikkerhetskopi)»**.
-
-Dette er en engangsfunksjon for brukere som trenger å gjenopprette tidligere SAVE-entitets-ID-er etter endringer i integrasjonen. Funksjonen er normalt **ikke nødvendig** ved installasjon eller oppgradering.
-
-**Ta en sikkerhetskopi av Home Assistant før du bruker funksjonen.** Ikke aktiver den dersom entitetene allerede fungerer som forventet.
-
-Ved gjenoppretting av tidligere ID-er kan Recorder gi advarsler dersom det allerede finnes historikk. Historikk fra midlertidige ID-er blir ikke nødvendigvis slått sammen med opprinnelig historikk. Dette påvirker ikke Modbus-kommunikasjon eller styring. Kontroller entiteter etter oppgradering.
-
----
+------------------------------------------------------------------------
 
 ## ℹ️ Begrensninger og tekniske notater
 
@@ -300,6 +280,144 @@ Ved gjenoppretting av tidligere ID-er kan Recorder gi advarsler dersom det aller
     → der full stopp ikke er tilgjengelig brukes lavest mulige
     viftehastighet
 -   Tilgjengelige funksjoner avhenger av modell og konfigurasjon
+
+## 🔧 Modbus-gatewayer og ytelsesprofiler
+
+Forskjellige Modbus TCP-gatewayer oppfører seg svært forskjellig i
+praksis.
+
+Noen gatewayer (som **Systemair SAVE Connect**) er relativt
+underdimensjonerte og kan: - slite med store Modbus-leserequests -
+avvise enkelte funksjonskoder (FC04 for input-register) - bli ustabile
+hvis de polles for aggressivt
+
+Andre gatewayer (f.eks. **Elfin EW11** og lignende) kan vanligvis
+håndtere: - større batch-lesinger - mer aggressiv polling - normal bruk
+av Modbus-funksjonskoder
+
+For å håndtere dette tilbyr integrasjonen en
+**Gateway-profil**-innstilling:
+
+-   **Generic gateway** (standard)\
+    Optimalisert for eksterne gatewayer som EW11. Bruker større batcher
+    og raskere polling.
+
+-   **Systemair SAVE Connect (safe mode)**\
+    Bruker svært små batcher, unngår problematiske funksjonskoder og
+    prioriterer stabilitet over hastighet.
+
+Du kan endre gateway-profil fra integrasjonens **Options** uten
+reinstallasjon.
+
+Hvis du opplever tilfeldige lese-feil, trege oppdateringer eller dropp i
+tilkoblingen med SAVE Connect, velg **Systemair SAVE Connect (safe
+mode)** og vurder å bruke et høyere scan interval (f.eks. 30--60
+sekunder).
+
+------------------------------------------------------------------------
+
+### 🔍 Feilsøking av tilkobling
+
+Under oppsett utfører integrasjonen en rask TCP-tilkoblingstest før den
+forsøker Modbus-kommunikasjon.
+
+Hvis du får **"Failed to connect"**: - Sørg for at IP-adressen er
+korrekt og nås fra Home Assistant - Verifiser at port `502` (eller
+konfigurert port) er åpen og nåbar fra Home Assistant - Sjekk at enheten
+du kobler til faktisk er et Modbus TCP-endepunkt (ikke bare et
+UI/nettverksmodul) - Hvis du bruker SAVE Connect og opplever
+ustabilitet, prøv **Systemair SAVE Connect (safe mode)** og øk scan
+interval (f.eks. 30--60s)
+
+Hvis Modbus fungerer fra en PC men ikke fra Home Assistant, skyldes
+problemet ofte: - Forskjeller i nettverk/VLAN/brannmur mellom PC og Home
+Assistant - Gateway-begrensninger eller særegenheter i håndtering av
+tilkoblinger
+
+------------------------------------------------------------------------
+
+## 🔌 Fysisk installasjon -- Elfin EW11 (Modbus RTU → TCP)
+
+Denne seksjonen er kun relevant hvis aggregatet **ikke** har innebygd
+Modbus TCP.
+
+### ⚠️ ADVARSEL
+
+Koble alltid fra strømmen til aggregatet før du åpner det.\
+Ved usikkerhet, kontakt kvalifisert fagperson.
+
+### 1. Modbus-tilkobling på Systemair SAVE
+
+Finn terminalene for ekstern kommunikasjon på hovedkortet: - `A (+)` -
+`B (–)` - `24V` - `GND`
+
+![Eksempel på koblingsskjema (VTR-500)](image/koblingsskjemaVTR-500.png)
+
+### 2. Koble til Elfin EW11
+
+Koble ledningene i henhold til diagrammet under:
+
+![EW11 koblingsskjema](image/koblings%20skjema%20EW11.png)
+
+------------------------------------------------------------------------
+
+### 3. Konfigurer Elfin EW11
+
+1.  Koble til Wi-Fi-nettverket `EW1x_...` (åpent nettverk)
+2.  Åpne webgrensesnittet: `http://10.10.100.254`
+3.  Logg inn med:
+    -   Brukernavn: `admin`
+    -   Passord: `admin`
+4.  Gå til **System Settings → WiFi Settings**
+    -   Sett **WiFi Mode** til `STA`
+    -   Koble til ditt lokale nettverk
+5.  Restart enheten og sett en **statisk IP**
+6.  Åpne **Serial Port Settings** og konfigurer som vist:
+
+![Serial Port Settings EW11](image/serial%20port%20settings%20EW11.png)
+
+7.  Åpne **Communication Settings** og legg til en Modbus-profil:
+
+![Communication Settings
+EW11](image/communication%20settings%20EW11.png)
+
+8.  Under **Status** skal pakk tellere øke:
+
+![EW11 communication status](image/kommunikasjon%20EW11.png)
+
+⚠️ **Viktig informasjon om pakketellere**
+
+Systemair-aggregatet bruker **Modbus RTU**, som er en
+**forespørsel/svar-protokoll**.\
+Det betyr at aggregatet **ikke sender data av seg selv**.
+
+Kommunikasjon starter først når en **Modbus-klient aktivt spør etter
+data** (for eksempel Home Assistant-integrasjonen).
+
+Derfor kan **pakkecounteren på EW11-statussiden stå på 0** helt til Home
+Assistant forsøker å koble til.
+
+Hvis du ser **0 pakker**:
+
+1.  Fullfør konfigurasjonen av EW11
+2.  Legg til integrasjonen i Home Assistant
+3.  Start integrasjonen
+4.  Sjekk deretter EW11-statussiden på nytt
+
+Når Home Assistant begynner å lese Modbus-registere, vil
+**pakkecounteren begynne å øke**.
+
+Hvis den fortsatt står på 0, kontroller:
+
+-   RS485-koblingene (`A` / `B`)
+-   Baudrate
+-   Parity og stop-bits
+-   Modbus slave-ID
+
+Når kommunikasjonen er bekreftet kan IP-adressen brukes direkte i Home
+Assistant.
+
+------------------------------------------------------------------------
 
 ## 🙏 Takk / bidragsytere
 
