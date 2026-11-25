@@ -228,13 +228,13 @@ class ModbusTcpClient:
                 if not fut.cancelled():
                     fut.set_exception(e)
             finally:
-                # pacing between requests for SAVE Connect
-                if self._pacing_s > 0:
-                    try:
+                # Always account for dequeued work, including cancellation.
+                # Let cancellation propagate instead of returning from finally.
+                try:
+                    if self._pacing_s > 0:
                         await asyncio.sleep(self._pacing_s)
-                    except asyncio.CancelledError:
-                        return
-                self._queue.task_done()
+                finally:
+                    self._queue.task_done()
 
     async def _enqueue(self, op_name: str, op: Callable[[], Awaitable[Any]]) -> Any:
         """Enqueue an op and wait for result. Only used in save_connect profile."""
@@ -485,6 +485,39 @@ class ModbusTcpClient:
     # ----------------------------
     # Public API
     # ----------------------------
+
+    async def read_ascii_registers(self, address: int, count: int) -> str | None:
+        """Read ASCII text encoded as one character per holding register.
+
+        ``address`` is the Modbus client offset used by the existing register
+        map (not the one-based register number shown in documentation).
+        Returns None on a failed read or invalid character data. This is
+        strictly read-only and respects the configured gateway pacing/queue.
+        """
+        if not 1 <= count <= 125:
+            raise ValueError("count must be between 1 and 125")
+
+        values: list[int] = []
+        batch_size = min(self._max_batch_size or count, count)
+        for start in range(address, address + count, batch_size):
+            size = min(batch_size, address + count - start)
+            try:
+                rr = await self._do_read("read_holding_registers", start, size)
+                if rr is None or rr.isError() or len(rr.registers) != size:
+                    return None
+                values.extend(int(value) for value in rr.registers)
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("ASCII register read failed @%s len=%s", start, size, exc_info=True)
+                return None
+
+        # QModMaster confirmed this device stores one ASCII code per register,
+        # e.g. [0, 86, 84, 82, 32, 53, 48, 48, 0, 0] -> "VTR 500".
+        if any(value < 0 or value > 127 for value in values):
+            return None
+        text = "".join(chr(value) for value in values if value != 0).strip()
+        if not text or any(not char.isprintable() for char in text):
+            return None
+        return text
 
     async def read_register_map(self, register_defs: list[dict[str, Any]]) -> dict[str, Any]:
         # Ensure worker exists early (SAVE Connect only)

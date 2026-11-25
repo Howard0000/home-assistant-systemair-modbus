@@ -245,6 +245,11 @@ class CookerHoodActive(SystemairBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         data = self.coordinator.data
+        if getattr(self.coordinator, "name", "") == "Systemair AUX-2 staged read-only SAVE" and (
+            data.get("extractor_hood_pressure_switch_off_on") is None
+            or data.get("mode_status_register") is None
+        ):
+            return None
         try:
             hood_switch = int(float(data.get("extractor_hood_pressure_switch_off_on") or 0))
             mode_status = int(float(data.get("mode_status_register") or 0))
@@ -311,6 +316,8 @@ class PressureGuardActive(SystemairBaseEntity, BinarySensorEntity):
             return str(val) == "pressure_guard"
 
         raw = self.coordinator.data.get("mode_status_register")
+        if raw is None and getattr(self.coordinator, "name", "") == "Systemair AUX-2 staged read-only SAVE":
+            return None
         try:
             return int(float(raw or 0)) == 12
         except (TypeError, ValueError):

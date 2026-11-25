@@ -37,7 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     async_add_entities([SystemairVTRClimate(entry, coordinator, client, model)])
 
-
 class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
     """CD4 supply-air temperature control.
 
@@ -50,7 +49,7 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
     """
 
     _attr_translation_key = "cd4_climate"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -207,12 +206,12 @@ class SystemairCd4Climate(SystemairBaseEntity, ClimateEntity):
         return HVACAction.FAN
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         # TEMP_IN1 = SS = supply-air temperature, documented by Systemair.
         return self._get_float("temperature_sensor_1")
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         level = self._get_int("temperature_level_command_register")
         setpoint = self._get_float("temperature_setpoint")
 
@@ -302,7 +301,7 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
     """Main control entity (setpoint + mode)."""
 
     _attr_translation_key = "climate"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -395,11 +394,11 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         return float(self.coordinator.data.get("supply_air_setpoint") or 20.0)
 
     @property
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         supply = self._get_float("supply_temperature", None)
         if supply is not None:
             return supply
@@ -411,3 +410,26 @@ class SystemairVTRClimate(SystemairBaseEntity, ClimateEntity):
             return
         await self._client.write_0_1c(self._model.ADDR_SUPPLY_AIR_SETPOINT_0_1C, float(val))
         await self.coordinator.async_request_refresh()
+
+
+class SystemairAux2SetpointClimate(SystemairVTRClimate):
+    """Modbus RTU pilot: only target temperature is writable; other controls hidden."""
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_hvac_modes = [HVACMode.AUTO]
+
+    def __init__(self, entry, coordinator, client, model):
+        super().__init__(entry, coordinator, client, model)
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_hvac_modes = [HVACMode.AUTO]
+        self._attr_preset_modes = []
+
+    @property
+    def hvac_mode(self):
+        return HVACMode.AUTO
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        if hvac_mode != HVACMode.AUTO:
+            raise ValueError("Modbus RTU pilot only supports target temperature writes")
+
+    async def async_set_preset_mode(self, preset_mode):
+        raise ValueError("Modbus RTU pilot does not support preset writes")
