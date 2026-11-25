@@ -25,6 +25,39 @@ class Cd4Model:
     model_name = "Systemair CD4 (legacy)"
     manufacturer = "Systemair"
 
+    # CD4 REG_SYSTEM_TYPE: documentation register 501, Modbus offset 500.
+    # Unknown/unread values must never prevent the integration from loading.
+    SYSTEM_TYPE_MODELS: dict[int, str] = {
+        0: "VR 400",
+        1: "VR 700",
+        2: "VR 700DK",
+        3: "VR 400DE",
+        4: "VTC 300",
+        5: "VTC 700",
+        12: "VTR 150K",
+        13: "VTR 200B",
+        14: "VSR 300",
+        15: "VSR 500",
+        16: "VSR 150",
+        17: "VTR 300",
+        18: "VTR 500",
+        19: "VSR 300DE",
+        20: "VTC 200",
+        21: "VTC 100",
+    }
+
+    @classmethod
+    def device_model_name(cls, raw_value: Any) -> str:
+        """Resolve a documented CD4 system type, with a safe fallback."""
+        try:
+            code = int(raw_value)
+            if raw_value is None or float(raw_value) != code:
+                return cls.model_name
+        except (TypeError, ValueError, OverflowError):
+            return cls.model_name
+        name = cls.SYSTEM_TYPE_MODELS.get(code)
+        return f"Systemair {name} (CD4)" if name else cls.model_name
+
     # --- Manual fan speed control (CD4) ---
     # CD4 uses the same register for status and command.
     ADDR_MANUAL_SPEED_COMMAND = r(100)

@@ -27,18 +27,33 @@ class SaveModel:
     model_name = "Systemair SAVE"
     manufacturer = "Systemair"
 
+    # Verified on SAVE VTR500 using FC03: one ASCII character per register.
+    # Read separately at startup, not through the numeric REGISTERS map.
+    ADDR_SYSTEM_MODEL_TEXT = 8020
+    SYSTEM_MODEL_TEXT_REGISTER_COUNT = 10
+
+    @classmethod
+    def device_model_name(cls, raw_value: Any) -> str:
+        """Return the SAVE device model, or a safe generic fallback."""
+        if not isinstance(raw_value, str):
+            return cls.model_name
+        name = " ".join(raw_value.strip().split())
+        if not name or len(name) > 32 or not all(32 <= ord(c) <= 126 for c in name):
+            return cls.model_name
+        return f"Systemair {name} (SAVE)"
+
     def __init__(self, *, qv_max: int | None = None) -> None:
         """Create a model instance.
 
         qv_max is the nominal maximum air flow (m³/h) for the selected unit model.
-        If not provided, we fall back to the legacy factor (fan % * 3).
+        Without a known model, estimated airflow is unavailable.
         """
         self._qv_max = qv_max
 
     @property
     def flow_factor(self) -> float:
         """m³/h per % (estimated)."""
-        return (self._qv_max / 100.0) if self._qv_max else 3.0
+        return (self._qv_max / 100.0) if self._qv_max is not None else None
 
     ADDR_MODE_STATUS = 1160
     ADDR_MODE_COMMAND = 1161
@@ -47,6 +62,7 @@ class SaveModel:
     ADDR_ECO_MODE = 2504
     ADDR_HOLIDAY_DURATION_DAYS = 1100
     ADDR_AWAY_DURATION_HOURS = 1101
+    ADDR_FIREPLACE_DURATION_MINUTES = 1102
     ADDR_REFRESH_DURATION_MINUTES = 1103
     ADDR_CROWDED_DURATION_HOURS = 1104
 
@@ -180,8 +196,8 @@ class SaveModel:
         RegisterDef(key='fan_speed_comp_summer', address=1258, input_type='holding', data_type='uint16', unit='%'),
 
         # --- Fan level status ---
-        RegisterDef(key='saf_speed_low', address=1302, input_type='input', data_type='uint16', unit='rpm'),
-        RegisterDef(key='eaf_speed_low', address=1303, input_type='input', data_type='uint16', unit='rpm'),
+        RegisterDef(key='saf_speed_low', address=1302, input_type='input', data_type='uint16', unit='%'),
+        RegisterDef(key='eaf_speed_low', address=1303, input_type='input', data_type='uint16', unit='%'),
 
         # --- System status / permissions ---
         RegisterDef(key='fan_manual_stop_allowed_register', address=1352, input_type='holding', data_type='uint16'),
@@ -389,7 +405,8 @@ class SaveModel:
         p_e = _to_int(data.get("extractor_fan_pwr_fact"), 0)
         p_s = _to_int(data.get("supply_air_fan_pwr_fact"), 0)
 
-        out["exhaust_air_flow_rate"] = round(p_e * self.flow_factor)
-        out["supply_air_flow_rate"] = round(p_s * self.flow_factor)
+        factor = self.flow_factor
+        out["exhaust_air_flow_rate"] = round(p_e * factor) if factor is not None else None
+        out["supply_air_flow_rate"] = round(p_s * factor) if factor is not None else None
 
         return out
