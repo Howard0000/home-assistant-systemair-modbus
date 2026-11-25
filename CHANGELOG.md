@@ -5,6 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] – 2026-11-25
+
+### Added
+
+- **Modbus RTU:** Added serial Modbus communication through ESPHome Serial Proxy.
+- **Modbus RTU:** Support for Home Assistant Connect AUX-2 with USB–RS485 adapters.
+- **Modbus RTU:** Support for ESP32-based RS485 solutions.
+- **Modbus RTU:** Shared transport implementation for SAVE and CD4, supporting both reading and writing.
+- **Modbus RTU:** Coordinated serial communication to prevent concurrent register operations.
+- **Modbus RTU:** Individual register read fallback when block reads fail.
+- **Modbus RTU:** Diagnostic sensors for polling duration, registers with values, and failed registers.
+- **SAVE:** Automatic unit model identification using ASCII model information from Holding Registers 8020–8029.
+- **SAVE:** Human-readable system type sensor.
+- **SAVE:** Adjustable Fireplace mode duration (1–60 minutes).
+- **SAVE:** Migration support for restoring legacy entity IDs.
+- **CD4:** Automatic model identification using `REG_SYSTEM_TYPE` (register 501).
+- **CD4:** Human-readable system type sensor with support for documented model codes, including VTC100.
+- **CD4:** Human-readable heater type sensor with Norwegian and English translations.
+- **Documentation:** Dedicated Norwegian and English installation guides for Modbus TCP/IP and Modbus RTU.
+
+### Fixed
+
+- **SAVE:** Corrected low supply and extract fan speed units from RPM to %.
+- **SAVE:** Corrected the Eco heating offset adjustment range to 0–10 °C.
+- **SAVE:** Improved legacy entity ID migration, including entity IDs with additional prefixes.
+- **SAVE:** Corrected migration of the Eco heating offset entity.
+- **SAVE:** Added collision protection when restoring legacy entity IDs.
+- **CD4:** Improved fan speed percentage handling for three-speed units.
+- **Climate:** Updated deprecated temperature properties for compatibility with future Home Assistant versions.
+- **Modbus RTU:** Corrected polling interval handling to respect the configured scan interval, with a minimum of 10 seconds.
+- **Modbus RTU:** Corrected slave ID handling to respect updated integration options.
+- **Configuration:** Standardized the supported slave ID range to 1–247 across TCP and RTU.
+- **Translations:** Corrected Norwegian and English translations for the configuration flow.
+
+### Changed
+
+- **SAVE and CD4:** Automatically identified model names are now displayed in Home Assistant device information.
+- **Airflow calculation:** Automatically selects model-specific airflow calculation parameters based on the detected unit model, eliminating the need for manual unit model selection during setup.
+- **SAVE:** Added caching and fallback handling for automatic unit model identification.
+- **CD4:** Unknown system and heater type values are handled gracefully.
+- **Configuration:** Simplified setup by requiring only the selection of the unit family (SAVE or CD4), rather than the specific unit model.
+- **Configuration:** Introduced hardware-independent connection labels for Modbus TCP/IP and Modbus RTU.
+- **Configuration:** Communication profile selection is now only displayed for Modbus TCP/IP.
+- **Configuration:** Replaced the slave ID slider with a numeric input field.
+- **Documentation:** Updated Norwegian and English README files, installation guides, and screenshots.
+- **Documentation:** Added upgrade instructions and information about potential Home Assistant Recorder warnings during entity ID migration.
+
+### Compatibility
+
+- Existing Modbus TCP/IP functionality is retained.
+- Existing entity unique ID formats are preserved.
+- Legacy SAVE entity ID restoration is supported.
+- Existing dashboards and automations are intended to remain compatible when upgrading from v1.3.0.
+- Modbus TCP/IP and Modbus RTU are supported within the same integration.
+
+### Tested
+
+- SAVE VTR500 – Modbus TCP/IP via EW11.
+- SAVE VTR500 – Modbus RTU via Home Assistant Connect AUX-2.
+- SAVE VTR500 – Modbus RTU via ESP32-C6.
+- Modbus TCP/IP and RTU read and write operations.
+- Switching between TCP/IP and RTU.
+- Automatic unit model identification.
+- Legacy SAVE entity ID migration.
+- Existing dashboards and automations following migration.
+- Norwegian and English configuration flows.
+- CD4 functionality using a simulator and physical units through community contributors.
+
+CD4 test coverage remains more limited than SAVE test coverage.
+
+### Upgrade Notes
+
+- Creating a Home Assistant backup before upgrading is recommended.
+- Existing users can upgrade without reinstalling the integration.
+- Home Assistant Recorder may report warnings when restoring legacy entity IDs that already have historical data. Historical data from temporary entity IDs may not be merged with the original history.
+- These Recorder warnings do not affect Modbus communication or unit control.
+
+---
+
 ## [1.3.0] – 2026-09-12
 
 ### Added
